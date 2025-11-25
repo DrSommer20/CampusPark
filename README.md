@@ -68,5 +68,3 @@ Keine direkte Kopplung – reine Event-getriebene Integration.
 - **Web-Dashboard (HTML/JS + WebSockets)**
 - **Arduino Display Node (MAX7219 / LCD)**
 
-## 📁 Repository-Struktur (Vorschlag)
-

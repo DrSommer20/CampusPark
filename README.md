@@ -34,12 +34,16 @@ Keine direkte Kopplung – reine Event-getriebene Integration.
 ### **Publisher**
 - **ESP32 Nodes** (Metallsensoren pro Parkplatz)  
 - **Raspberry Pi Zero** (Kennzeichenerkennung)
+- **Parking-State-Service** (Aggregiert Belegung, erzeugt Status-Events)
+- **Violation-Service** (Prüft Regeln & Verstöße)
+- **Webpage** (Anmeldung neue User + Rausfahr-Benachritungen) 
 
 ### **Subscriber / Services**
 - **Parking-State-Service** (Aggregiert Belegung, erzeugt Status-Events)  
-- **Violation-Service** (Prüft Regeln & Verstöße)  
+- **Violation-Service** (Prüft Regeln & Verstöße)
+- **Webpage** (Anmeldung neue User + Rausfahr-Benachritungen)  
 - **Notification-/SMS-Service**  
-- **Logging+Analytics-Service (InfluxDB)**  
+- **Logging+Analytics-Service (InfluxDB)**
 - **Web-Dashboard** (Live-Visualisierung)  
 - **Arduino Display Node** (Anzeige freier Plätze)
 
@@ -51,10 +55,14 @@ Keine direkte Kopplung – reine Event-getriebene Integration.
 |----------------------------------|------------------------|------------------------------|--------------|
 | `parking/raw/spot/<id>`          | ESP32 Node            | Parking-State-Service        | Rohdaten vom Metallsensor |
 | `parking/access/licensePlate`    | Raspberry Pi Zero      | Parking-State, Violation     | ALPR-Kennzeichenereignisse |
+| `parking/access/privileged`    | Parking-State-Service    | Violation     | ALPR-Kennzeichenereignisse |
+| `parking/access/allocation`    | Parking-State-Service   | ESP32 Node     | Anzeige zugeordneter Parkplatz |
+| `parking/access/barrier`    | Parking-State-Service   | ESP32 Node     | Schranke öffnen/schließen |
 | `parking/state/spot/<id>`        | Parking-State-Service | Dashboard, Violation, Logging| Aggregierte Belegungsdaten |
 | `parking/state/summary`          | Parking-State-Service | Dashboard, Display, Logging  | Freie/belegte Plätze gesamt |
 | `parking/violation/<id>`         | Violation-Service     | Notification, Logging        | Parkverstöße |
-| `parking/analytics/*`            | Analytics-Service     | Dashboard                    | Prognosen & Statistiken |
+| `parking/registration/plate`         | Web-Service     | Parking-State-Service        | Anmeldung neues erlaubtes Kennzeichen |
+| `parking/registration/smsPlate`         | Web-Service     | Notification        | Anemldung neue Kennzeichen + Nummer Kombi |
 
 ---
 

@@ -62,7 +62,7 @@ Keine direkte Kopplung – reine Event-getriebene Integration.
 | `parking/state/summary`          | Parking-State-Service | Dashboard, Display, Logging  | Freie/belegte Plätze gesamt |
 | `parking/violation/<id>`         | Violation-Service     | Notification, Logging        | Parkverstöße |
 | `parking/registration/plate`         | Web-Service     | Parking-State-Service        | Anmeldung neues erlaubtes Kennzeichen |
-| `parking/registration/smsPlate`         | Web-Service     | Notification        | Anemldung neue Kennzeichen + Nummer Kombi |
+| `parking/registration/smsPlate`         | Web-Service     | Notification        | Anmeldung neue Kennzeichen + Nummer Kombi |
 
 ---
 

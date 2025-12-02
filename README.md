@@ -1,4 +1,4 @@
-# 🚗 CampusPark – MQTT-basierte Parkplatzorganisation für den DHBW-Campus
+# CampusPark – MQTT-basierte Parkplatzorganisation für den DHBW-Campus
 
 CampusPark ist ein verteiltes, eventbasiertes IoT-System zur automatischen Erfassung und Analyse von Parkplatzbelegung auf dem DHBW-Campus.  
 Im Mittelpunkt steht eine **Message-Oriented Architecture (MOA)** mit **MQTT-Broker**, vielen unabhängigen **Publishern/Subscriber-Services** sowie Edge-Devices (ESP32 + Metallsensoren & Raspberry Pi Zero).
@@ -14,7 +14,7 @@ Das System demonstriert:
 
 ---
 
-## 🎯 Ziele des Projekts
+## Ziele des Projekts
 - Echtzeit-Erfassung der Parkplatzbelegung
 - Automatisierte Regelprüfung (z. B. reserved spots)
 - Kennzeichenerkennung an der Einfahrt
@@ -25,7 +25,7 @@ Das System demonstriert:
 
 ---
 
-## 🧩 Systemarchitektur (Übersicht)
+## Systemarchitektur (Übersicht)
 
 ### **MQTT im Zentrum**
 Alle Komponenten kommunizieren ausschließlich über den MQTT-Broker.  
@@ -49,7 +49,7 @@ Keine direkte Kopplung – reine Event-getriebene Integration.
 
 ---
 
-## 📡 Topics (Auszug)
+## Topics (Auszug)
 
 | Topic                             | Publisher             | Subscriber                  | Beschreibung |
 |----------------------------------|------------------------|------------------------------|--------------|
@@ -66,7 +66,7 @@ Keine direkte Kopplung – reine Event-getriebene Integration.
 
 ---
 
-## 🛠 Verwendete Technologien
+## Verwendete Technologien
 
 - **ESP32 + Metallsensoren** (induktiv)
 - **Raspberry Pi Zero** (ALPR via OpenCV/easyOCR)

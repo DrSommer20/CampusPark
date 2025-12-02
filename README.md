@@ -60,7 +60,7 @@ Keine direkte Kopplung – reine Event-getriebene Integration.
 | `parking/access/barrier`    | Parking-State-Service   | ESP32 Node     | Schranke öffnen/schließen |
 | `parking/state/spot/<id>`        | Parking-State-Service | Dashboard, Violation, Logging| Aggregierte Belegungsdaten |
 | `parking/state/summary`          | Parking-State-Service | Dashboard, Display, Logging  | Freie/belegte Plätze gesamt |
-| `parking/violation/<id>`         | Violation-Service     | Notification, Logging        | Parkverstöße |
+| `parking/notification/`         | Violation-Service, Parking-State-Service     | Notification        | Versenden von Nachrichten |
 | `parking/registration/plate`         | Web-Service     | Parking-State-Service        | Anmeldung neues erlaubtes Kennzeichen |
 | `parking/registration/smsPlate`         | Web-Service     | Notification        | Anmeldung neue Kennzeichen + Nummer Kombi |
 

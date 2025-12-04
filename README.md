@@ -19,6 +19,7 @@ Das System demonstriert:
 - Automatisierte Regelprüfung (z. B. reserved spots)
 - Kennzeichenerkennung an der Einfahrt
 - Benachrichtigungen bei Verstößen (SMS)
+- Benachrichtigung Umparken
 - Live-Anzeige freier Plätze (Web + Arduino Display)
 - Zeitreihenanalyse & Prognosen (Analytics)
 - Vollständig verteilte Architektur ohne zentralen Applikationsserver

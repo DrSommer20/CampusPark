@@ -13,9 +13,7 @@ public class ParkingAccessCallback implements MqttCallback {
 
     private final MqttClient client;
     private final ObjectMapper mapper = new ObjectMapper();
-
     private final UserRegistry userRegistry = new UserRegistry();
-    private final SpotAllocator spotAllocator = new SpotAllocator();
 
     public ParkingAccessCallback(MqttClient client) {
         this.client = client;
@@ -30,7 +28,10 @@ public class ParkingAccessCallback implements MqttCallback {
     public void messageArrived(String topic, MqttMessage message) throws Exception {
 
         String payload = new String(message.getPayload(), StandardCharsets.UTF_8);
-        System.out.println("[MQTT] Received on " + topic + ": " + payload);
+        // Debug Log etwas gekürzt, damit bei vielen Sensoren die Konsole nicht explodiert
+        if(!topic.startsWith(Config.TOPIC_SPOT)) {
+            System.out.println("[MQTT] Received on " + topic + ": " + payload);
+        }
 
         if (topic.equals(Config.TOPIC_REGISTRATION)) {
             handleRegistration(payload);
@@ -40,6 +41,11 @@ public class ParkingAccessCallback implements MqttCallback {
 
         } else if (topic.equals(Config.TOPIC_MOVE_REQUEST)) {
             handleMoveRequest(payload);
+
+        } 
+        // WICHTIG: Hier prüfen wir mit startsWith, weil das Topic z.B. "parking/raw/spot/A-01" ist
+        else if (topic.startsWith(Config.TOPIC_SPOT)) {
+            handleSpotUpdate(topic, payload);
         }
     }
 
@@ -60,18 +66,18 @@ public class ParkingAccessCallback implements MqttCallback {
 
     private void handleAccess(String json) throws Exception {
         LicensePlateEvent lp = mapper.readValue(json, LicensePlateEvent.class);
-
         UserProfile user = userRegistry.findByPlate(lp.getPlate());
 
-        // 1. Unbekanntes Kennzeichen → Schranke verweigern
+        // 1. Unbekanntes Kennzeichen
         if (user == null) {
             System.out.println("[ACCESS] Unknown plate: " + lp.getPlate());
             publishBarrier(lp, "DENY", "unknown_plate");
             return;
         }
 
-        // 2. Parkplatz finden (z. B. freie Spots aus State-Service)
-        String spotId = spotAllocator.findSpotFor(user);
+        // 2. Parkplatz reservieren (Logic im Manager)
+        // HINWEIS: Hier nutzen wir jetzt den ParkingStateManager statt SpotAllocator
+        String spotId = SpotAllocator.reserveSpotForUser(user);
 
         if (spotId == null) {
             System.out.println("[ACCESS] No free spot available for " + lp.getPlate());
@@ -93,8 +99,8 @@ public class ParkingAccessCallback implements MqttCallback {
         UserProfile user = userRegistry.findByPlate(moveReq.getPlate());
 
         if (user == null) {
-            System.out.println("[MOVE] Move request for unknown plate: " + moveReq.getPlate());
-            return;
+             System.out.println("[MOVE] Request for unknown plate: " + moveReq.getPlate());
+             return;
         }
 
         NotificationEvent notif = NotificationEvent.fromMoveRequest(moveReq, user);
@@ -104,42 +110,23 @@ public class ParkingAccessCallback implements MqttCallback {
                 Config.TOPIC_NOTIFICATION,
                 new MqttMessage(notifJson.getBytes(StandardCharsets.UTF_8))
         );
+    }
 
-        System.out.println("[MOVE] Notification sent for plate: " + moveReq.getPlate());
+    private void handleSpotUpdate(String topic, String payload) throws Exception {
+        SpotUpdateEvent spotUpd = SpotUpdateEvent.of(topic, payload);
+        SpotAllocator.handleSensorUpdate(spotUpd.getSpotId(), spotUpd.isOccupied());
     }
 
     // -----------------------------
     // PUBLISHER-Methoden
     // -----------------------------
-
     private void publishBarrier(LicensePlateEvent lp, String action, String reason) throws Exception {
-        BarrierCommand cmd = new BarrierCommand(
-                lp.getGateId(),
-                lp.getPlate(),
-                action,
-                reason
-        );
-
-        String json = mapper.writeValueAsString(cmd);
-
-        client.publish(
-                Config.TOPIC_BARRIER,
-                new MqttMessage(json.getBytes(StandardCharsets.UTF_8))
-        );
+        BarrierCommand cmd = new BarrierCommand(lp.getGateId(), lp.getPlate(), action, reason);
+        client.publish(Config.TOPIC_BARRIER, new MqttMessage(mapper.writeValueAsString(cmd).getBytes(StandardCharsets.UTF_8)));
     }
 
     private void publishAllocation(LicensePlateEvent lp, UserProfile user, String spotId) throws Exception {
-        AllocationEvent alloc = new AllocationEvent(
-                lp.getPlate(),
-                lp.getGateId(),
-                spotId
-        );
-
-        String json = mapper.writeValueAsString(alloc);
-
-        client.publish(
-                Config.TOPIC_ALLOCATION,
-                new MqttMessage(json.getBytes(StandardCharsets.UTF_8))
-        );
+        AllocationEvent alloc = new AllocationEvent(lp.getPlate(), lp.getGateId(), spotId);
+        client.publish(Config.TOPIC_ALLOCATION, new MqttMessage(mapper.writeValueAsString(alloc).getBytes(StandardCharsets.UTF_8)));
     }
 }

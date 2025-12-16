@@ -6,13 +6,13 @@ import de.campuspark.util.DBConnection;
 
 public class UserRegistry {
 
-    private DBConnection dbconnection = new DBConnection();
+    private static DBConnection dbconnection = new DBConnection();
 
-    public void register(RegistrationEvent reg) {
+    public static void register(RegistrationEvent reg) {
         dbconnection.insertUser(reg.getUserId(), reg.getPlate(), reg.getPhoneNumber(), reg.getRole());
     }
 
-    public UserProfile findByPlate(String plate) {
+    public static UserProfile findByPlate(String plate) {
         return dbconnection.findUserByPlate(plate);
     }
 }

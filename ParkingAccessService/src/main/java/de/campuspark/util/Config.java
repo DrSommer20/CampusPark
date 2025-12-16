@@ -19,4 +19,9 @@ public class Config {
     public static final String TOPIC_BARRIER    = dotenv.get("TOPIC_BARRIER");
     public static final String TOPIC_NOTIFICATION = dotenv.get("TOPIC_NOTIFICATION");
     public static final String TOPIC_SPOT = dotenv.get("TOPIC_SPOT_RAW");
+
+    
+    public static final String DB_URL = dotenv.get("DB_URL");
+    public static final String DB_USER = dotenv.get("DB_USER");
+    public static final String DB_PASSWORD = dotenv.get("DB_PASSWORD");
 }

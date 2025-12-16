@@ -11,20 +11,17 @@ public class BarrierCommand {
 
     private final String gateId;   // z.B. "Einfahrt-Nord"
     private final String plate;    // Kennzeichen des Fahrzeugs
-    private final String action;   // OPEN oder DENY
-    private final String reason;   // optionaler Grund (z.B. unknown_plate)
+    private final String action;   // OPEN
 
     @JsonCreator
     public BarrierCommand(
             @JsonProperty("gateId") String gateId,
             @JsonProperty("plate") String plate,
-            @JsonProperty("action") String action,
-            @JsonProperty("reason") String reason
+            @JsonProperty("action") String action
     ) {
         this.gateId = gateId;
         this.plate = plate;
         this.action = action;
-        this.reason = reason;
     }
 
     public String getGateId() {
@@ -39,17 +36,12 @@ public class BarrierCommand {
         return action;
     }
 
-    public String getReason() {
-        return reason;
-    }
-
     @Override
     public String toString() {
         return "BarrierCommand{" +
                 "gateId='" + gateId + '\'' +
                 ", plate='" + plate + '\'' +
                 ", action='" + action + '\'' +
-                ", reason='" + reason + '\'' +
                 '}';
     }
 }

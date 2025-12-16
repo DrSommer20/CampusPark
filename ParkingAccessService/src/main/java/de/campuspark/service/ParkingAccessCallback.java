@@ -14,9 +14,6 @@ public class ParkingAccessCallback implements MqttCallback {
     private final MqttClient client;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    private final UserRegistry userRegistry = new UserRegistry();
-    private final SpotAllocator spotAllocator = new SpotAllocator();
-
     public ParkingAccessCallback(MqttClient client) {
         this.client = client;
     }
@@ -54,43 +51,43 @@ public class ParkingAccessCallback implements MqttCallback {
 
     private void handleRegistration(String json) throws Exception {
         RegistrationEvent reg = mapper.readValue(json, RegistrationEvent.class);
-        userRegistry.register(reg);
+        UserRegistry.register(reg);
         System.out.println("[ACCESS] Registered new plate: " + reg.getPlate());
     }
 
     private void handleAccess(String json) throws Exception {
         LicensePlateEvent lp = mapper.readValue(json, LicensePlateEvent.class);
 
-        UserProfile user = userRegistry.findByPlate(lp.getPlate());
+        UserProfile user = UserRegistry.findByPlate(lp.getPlate());
 
         // 1. Unbekanntes Kennzeichen → Schranke verweigern
         if (user == null) {
             System.out.println("[ACCESS] Unknown plate: " + lp.getPlate());
-            publishBarrier(lp, "DENY", "unknown_plate");
+            publishAllocation(lp, user, "-2", "DENY");
             return;
         }
 
         // 2. Parkplatz finden (z. B. freie Spots aus State-Service)
-        String spotId = spotAllocator.findSpotFor(user);
+        String spotId = SpotAllocator.reserveSpotForUser(user);
 
         if (spotId == null) {
             System.out.println("[ACCESS] No free spot available for " + lp.getPlate());
-            publishBarrier(lp, "DENY", "no_free_spot");
+            publishAllocation(lp, user, "-1", "DENY");
             return;
         }
 
         // 3. Schranke öffnen
-        publishBarrier(lp, "OPEN", "valid_user");
+        publishBarrier(lp, "OPEN");
 
         // 4. Display-/Parking-Node informieren
-        publishAllocation(lp, user, spotId);
+        publishAllocation(lp, user, spotId, "ALLOW");
 
         System.out.println("[ACCESS] Allocation OK: " + lp.getPlate() + " -> " + spotId);
     }
 
     private void handleMoveRequest(String json) throws Exception {
         MoveRequestEvent moveReq = mapper.readValue(json, MoveRequestEvent.class);
-        UserProfile user = userRegistry.findByPlate(moveReq.getPlate());
+        UserProfile user = UserRegistry.findByPlate(moveReq.getPlate());
 
         if (user == null) {
             System.out.println("[MOVE] Move request for unknown plate: " + moveReq.getPlate());
@@ -112,12 +109,11 @@ public class ParkingAccessCallback implements MqttCallback {
     // PUBLISHER-Methoden
     // -----------------------------
 
-    private void publishBarrier(LicensePlateEvent lp, String action, String reason) throws Exception {
+    private void publishBarrier(LicensePlateEvent lp, String action) throws Exception {
         BarrierCommand cmd = new BarrierCommand(
                 lp.getGateId(),
                 lp.getPlate(),
-                action,
-                reason
+                action
         );
 
         String json = mapper.writeValueAsString(cmd);
@@ -128,11 +124,12 @@ public class ParkingAccessCallback implements MqttCallback {
         );
     }
 
-    private void publishAllocation(LicensePlateEvent lp, UserProfile user, String spotId) throws Exception {
+    private void publishAllocation(LicensePlateEvent lp, UserProfile user, String spotId, String action) throws Exception {
         AllocationEvent alloc = new AllocationEvent(
                 lp.getPlate(),
                 lp.getGateId(),
-                spotId
+                spotId,
+                action
         );
 
         String json = mapper.writeValueAsString(alloc);

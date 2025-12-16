@@ -13,15 +13,19 @@ public class AllocationEvent {
     private final String plate;       // erkannter Nutzer / Kennzeichen
     private final String gateId;      // Einfahrt aus der das Fahrzeug kommt
     private final String spotId;      // zugewiesener Parkplatz (z.B. "A-12")
+    private final String action;
+
     @JsonCreator
     public AllocationEvent(
             @JsonProperty("plate") String plate,
             @JsonProperty("gateId") String gateId,
-            @JsonProperty("spotId") String spotId
+            @JsonProperty("spotId") String spotId,
+            @JsonProperty("action") String action
     ) {
         this.plate = plate;
         this.gateId = gateId;
         this.spotId = spotId;
+        this.action = action;
     }
 
     public String getPlate() {
@@ -36,6 +40,9 @@ public class AllocationEvent {
         return spotId;
     }
 
+    public String getAction() {
+        return action;
+    }
 
     @Override
     public String toString() {
@@ -43,6 +50,7 @@ public class AllocationEvent {
                 "plate='" + plate + '\'' +
                 ", gateId='" + gateId + '\'' +
                 ", spotId='" + spotId + '\'' +
+                ", action='" + action + '\'' +
                 '}';
     }
 }

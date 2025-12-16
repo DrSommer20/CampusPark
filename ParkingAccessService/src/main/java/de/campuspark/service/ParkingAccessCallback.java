@@ -27,7 +27,10 @@ public class ParkingAccessCallback implements MqttCallback {
     public void messageArrived(String topic, MqttMessage message) throws Exception {
 
         String payload = new String(message.getPayload(), StandardCharsets.UTF_8);
-        System.out.println("[MQTT] Received on " + topic + ": " + payload);
+        // Debug Log etwas gekürzt, damit bei vielen Sensoren die Konsole nicht explodiert
+        if(!topic.startsWith(Config.TOPIC_SPOT)) {
+            System.out.println("[MQTT] Received on " + topic + ": " + payload);
+        }
 
         if (topic.equals(Config.TOPIC_REGISTRATION)) {
             handleRegistration(payload);
@@ -37,6 +40,11 @@ public class ParkingAccessCallback implements MqttCallback {
 
         } else if (topic.equals(Config.TOPIC_MOVE_REQUEST)) {
             handleMoveRequest(payload);
+
+        } 
+        // WICHTIG: Hier prüfen wir mit startsWith, weil das Topic z.B. "parking/raw/spot/A-01" ist
+        else if (topic.startsWith(Config.TOPIC_SPOT)) {
+            handleSpotUpdate(topic, payload);
         }
     }
 
@@ -60,7 +68,7 @@ public class ParkingAccessCallback implements MqttCallback {
 
         UserProfile user = UserRegistry.findByPlate(lp.getPlate());
 
-        // 1. Unbekanntes Kennzeichen → Schranke verweigern
+        // 1. Unbekanntes Kennzeichen
         if (user == null) {
             System.out.println("[ACCESS] Unknown plate: " + lp.getPlate());
             publishAllocation(lp, user, "-2", "DENY");
@@ -90,8 +98,8 @@ public class ParkingAccessCallback implements MqttCallback {
         UserProfile user = UserRegistry.findByPlate(moveReq.getPlate());
 
         if (user == null) {
-            System.out.println("[MOVE] Move request for unknown plate: " + moveReq.getPlate());
-            return;
+             System.out.println("[MOVE] Request for unknown plate: " + moveReq.getPlate());
+             return;
         }
 
         NotificationEvent notif = NotificationEvent.fromMoveRequest(moveReq, user);
@@ -101,8 +109,11 @@ public class ParkingAccessCallback implements MqttCallback {
                 Config.TOPIC_NOTIFICATION,
                 new MqttMessage(notifJson.getBytes(StandardCharsets.UTF_8))
         );
+    }
 
-        System.out.println("[MOVE] Notification sent for plate: " + moveReq.getPlate());
+    private void handleSpotUpdate(String topic, String payload) throws Exception {
+        SpotUpdateEvent spotUpd = SpotUpdateEvent.of(topic, payload);
+        SpotAllocator.handleSensorUpdate(spotUpd.getSpotId(), spotUpd.isOccupied());
     }
 
     // -----------------------------

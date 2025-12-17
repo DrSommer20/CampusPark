@@ -4,23 +4,26 @@
 #include <Adafruit_ST7735.h>
 #include <SPI.h>
 
-#define TFT_CS   5   // CS
-#define TFT_DC   2   // DC
-#define TFT_RST  4   // RESET
+//TFT Pins
+#define TFT_CS   2  
+#define TFT_DC   5  
+#define TFT_RST  4   
+#define TFT_MOSI 25 
+#define TFT_SCLK 18  
 
-// -------- WLAN-DATEN --------
-const char* ssid        = "";
-const char* password    = "";
+// WLAN-DATEN
+const char* ssid          = "";
+const char* password      = "";
 
-// -------- MQTT-DATEN --------
-const char* mqtt_server   = ""; 
-const uint16_t mqtt_port  = 1883;              
-const char* mqttUser      = "";               
-const char* mqttPassword  = ""; 
+// MQTT-DATEN
+const char* mqtt_server   = "";
+const uint16_t mqtt_port  = 1883;
+const char* mqttUser      = "";
+const char* mqttPassword  = "";
 
-const char* topic_sub     = "parking/raw/spot/A-01";
+const char* topic_sub     = "parking/state/summary";
 
-Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
 WiFiClient espClient;
 PubSubClient client(espClient);
 
@@ -39,24 +42,21 @@ void tftPrintCenter(const String &text, uint8_t textSize, uint16_t color, int16_
 
 void callback(char* topic, byte* payload, unsigned int length) {
   tft.fillScreen(ST77XX_BLACK);
-  // Payload in String umwandeln
+  // Parse Payload to String
   String msg;
   for (unsigned int i = 0; i < length; i++) {
     msg += (char)payload[i];
   }
+
   msg.trim();
+  int count = atoi(msg.c_str());
 
-  // Topic oben klein anzeigen
-  tftPrintCenter(String(topic), 1, ST77XX_YELLOW, 5);
-
-  // Zustand groß in der Mitte anzeigen
-  if (msg.equalsIgnoreCase("occupied")) {
-    tftPrintCenter("BELEGT", 3, ST77XX_RED, 50);
-  } else if (msg.equalsIgnoreCase("free")) {
-    tftPrintCenter("FREI", 3, ST77XX_GREEN, 50);
+  if (count <= 0) 
+    tftPrintCenter("Parkplatz belegt", 3, ST77XX_RED, 30); 
   } else {
-    // Irgendein anderer Payload -> einfach anzeigen
-    tftPrintCenter(msg, 2, ST77XX_WHITE, 50);
+    uint16_t color = (count < 5) ? ST77XX_YELLOW : ST77XX_GREEN;
+    tftPrintCenter("Freie Plaetze", 2, color, 20); 
+    tftPrintCenter(String(count), 4, color, 50); 
   }
 }
 
@@ -126,9 +126,7 @@ void setup() {
   tftPrintCenter("MQTT-Daten", 1, ST77XX_WHITE, 50);
 }
 
-// ----------------------------
-// loop()
-// ----------------------------
+
 void loop() {
   if (!client.connected()) {
     reconnect();

@@ -20,7 +20,7 @@ public class ParkingAccessCallback implements MqttCallback {
 
     @Override
     public void connectionLost(Throwable cause) {
-        System.err.println("[ERROR] MQTT connection lost: " + cause.getMessage());
+        System.err.println("[ERROR] MQTT connection lost: " + cause.getLocalizedMessage());
     }
 
     @Override
@@ -28,9 +28,9 @@ public class ParkingAccessCallback implements MqttCallback {
 
         String payload = new String(message.getPayload(), StandardCharsets.UTF_8);
         // Debug Log etwas gekürzt, damit bei vielen Sensoren die Konsole nicht explodiert
-        if(!topic.startsWith(Config.TOPIC_SPOT)) {
+        //if(!topic.startsWith(Config.TOPIC_SPOT.replace("#", ""))) {
             System.out.println("[MQTT] Received on " + topic + ": " + payload);
-        }
+        //}
 
         if (topic.equals(Config.TOPIC_REGISTRATION)) {
             handleRegistration(payload);
@@ -42,15 +42,13 @@ public class ParkingAccessCallback implements MqttCallback {
             handleMoveRequest(payload);
 
         } 
-        // WICHTIG: Hier prüfen wir mit startsWith, weil das Topic z.B. "parking/raw/spot/A-01" ist
-        else if (topic.startsWith(Config.TOPIC_SPOT)) {
+        else if (topic.startsWith(Config.TOPIC_SPOT.replace("#",""))) {
             handleSpotUpdate(topic, payload);
         }
     }
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
-        // optional logging
     }
 
     // -----------------------------
@@ -76,7 +74,9 @@ public class ParkingAccessCallback implements MqttCallback {
         }
 
         // 2. Parkplatz finden (z. B. freie Spots aus State-Service)
-        String spotId = SpotAllocator.reserveSpotForUser(user);
+        SpotInfo spot = SpotAllocator.reserveSpotForUser(user);
+        publishSpot(spot);
+        String spotId = spot.getSpotId();
 
         if (spotId == null) {
             System.out.println("[ACCESS] No free spot available for " + lp.getPlate());
@@ -113,7 +113,7 @@ public class ParkingAccessCallback implements MqttCallback {
 
     private void handleSpotUpdate(String topic, String payload) throws Exception {
         SpotUpdateEvent spotUpd = SpotUpdateEvent.of(topic, payload);
-        SpotAllocator.handleSensorUpdate(spotUpd.getSpotId(), spotUpd.isOccupied());
+        publishSpot(SpotAllocator.handleSensorUpdate(spotUpd.getSpotId(), spotUpd.isOccupied()));
     }
 
     // -----------------------------
@@ -126,12 +126,14 @@ public class ParkingAccessCallback implements MqttCallback {
                 lp.getPlate(),
                 action
         );
-
         String json = mapper.writeValueAsString(cmd);
+
+        MqttMessage message = new MqttMessage(json.getBytes(StandardCharsets.UTF_8));
+        message.setQos(2);
 
         client.publish(
                 Config.TOPIC_BARRIER,
-                new MqttMessage(json.getBytes(StandardCharsets.UTF_8))
+                message
         );
     }
 
@@ -144,10 +146,39 @@ public class ParkingAccessCallback implements MqttCallback {
         );
 
         String json = mapper.writeValueAsString(alloc);
+        MqttMessage message = new MqttMessage(json.getBytes(StandardCharsets.UTF_8));
+        message.setQos(1);
 
         client.publish(
                 Config.TOPIC_ALLOCATION,
-                new MqttMessage(json.getBytes(StandardCharsets.UTF_8))
+                message
+        );
+    }
+
+    private void publishSpot(SpotInfo spot) throws Exception {
+        if(spot == null) return;
+        SpotStateMessage msg = new SpotStateMessage(
+                spot.getSpotId(),
+                spot.getState().toString(),
+                spot.getAssignedPlate(),
+                spot.getArrivalTime(),
+                spot.getEstimatedDepartureTime()
+        );
+        String json = mapper.writeValueAsString(msg);
+
+        MqttMessage message = new MqttMessage(json.getBytes(StandardCharsets.UTF_8));
+        message.setQos(1);
+
+        client.publish(
+                Config.TOPIC_SPOT_STATE + spot.getSpotId(),
+                message
+        );
+
+        message = new MqttMessage(SpotAllocator.getFreeSpotCount().getBytes());
+
+        client.publish(
+                Config.TOPIC_SPOT_COUNT,
+                message
         );
     }
 }

@@ -3,13 +3,12 @@ package de.campuspark.logic;
 import java.time.Instant;
 
 public class SpotInfo {
-    public enum State { FREE, RESERVED, OCCUPIED }
+    public enum State { free, reserved, occupied }
 
     private final String spotId;
     private State state;
     private String assignedPlate;
     
-    // NEU: Zeitstempel
     private Instant arrivalTime;
     private Instant estimatedDepartureTime; // Placeholder für Ihre Kursplan-Logik
 
@@ -19,7 +18,7 @@ public class SpotInfo {
     }
 
     public void reserveFor(String plate) {
-        this.state = State.RESERVED;
+        this.state = State.reserved;
         this.assignedPlate = plate;
         // Bei Reservierung gibt es noch keine Ankunftszeit
         this.arrivalTime = null; 
@@ -28,15 +27,15 @@ public class SpotInfo {
     public void occupyBy(String plate) {
         // Nur wenn wir nicht schon occupied waren, setzen wir die Ankunftszeit neu
         // (verhindert Updates bei Sensor-Flackern)
-        if (this.state != State.OCCUPIED) {
+        if (this.state != State.occupied) {
             this.arrivalTime = Instant.now();
         }
-        this.state = State.OCCUPIED;
+        this.state = State.occupied;
         this.assignedPlate = plate;
     }
 
     public void setFree() {
-        this.state = State.FREE;
+        this.state = State.free;
         this.assignedPlate = null;
         this.arrivalTime = null;
         this.estimatedDepartureTime = null;

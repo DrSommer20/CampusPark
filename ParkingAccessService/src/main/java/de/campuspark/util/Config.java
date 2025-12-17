@@ -14,6 +14,7 @@ public class Config {
     public static final String TOPIC_LICENSE_PLATE = dotenv.get("TOPIC_LICENSE_PLATE");
     public static final String TOPIC_MOVE_REQUEST  = dotenv.get("TOPIC_MOVE_REQUEST");
     public static final String TOPIC_SPOT_STATE = dotenv.get("TOPIC_SPOT_STATE");
+    public static final String TOPIC_SPOT_COUNT = dotenv.get("TOPIC_SPOT_COUNT");
 
     public static final String TOPIC_ALLOCATION = dotenv.get("TOPIC_ALLOCATION");
     public static final String TOPIC_BARRIER    = dotenv.get("TOPIC_BARRIER");

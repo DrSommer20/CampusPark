@@ -78,7 +78,7 @@ public class NotificationEvent {
                 userProfile.getUserId(),
                 userProfile.getPhoneNumber(),
                 "RELOCATE",
-                "Ihr Fahrzeug (" + moveReq.getPlate() + ") soll umgeparkt werden. Grund: " + moveReq.getReason(),
+                "Ihr Fahrzeug (" + moveReq.getPlate() + ") soll umgeparkt werden. Grund: " , //TODO: REASON for Relocaction
                 null // optional
         );
     }

@@ -17,7 +17,7 @@ import de.campuspark.util.Config;
 
 public class CalendarService {
 
-    public static DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+    public static DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     private static boolean isEventOnDate(VEvent event, LocalDate targetDate) {
         if (event.getDateStart() == null) return false;
@@ -59,6 +59,6 @@ public class CalendarService {
     // Quick test main method
     public static void main(String[] args) {
         Instant time = CalendarService.getEstimatedEndTime(new UserProfile("TEST", "01", "Student", "01234", "WWI23A"));
-        System.out.println(time.atZone(ZoneId.systemDefault()).toLocalTime().format(timeFormatter));
+        System.out.println(time.atZone(ZoneId.systemDefault()).toLocalDateTime().format(timeFormatter));
     }
 }

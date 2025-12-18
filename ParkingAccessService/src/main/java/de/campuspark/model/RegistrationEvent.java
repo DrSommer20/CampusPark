@@ -11,7 +11,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class RegistrationEvent {
 
     private final String plate;        // Kennzeichen
-    private final String userId;       // interne Benutzer-ID
     private final String role;         // z.B. student, mitarbeiter, professor, behindert
     private final String phoneNumber;  // für SMS-Notifications
     private final String timestamp;    // Zeitpunkt der Registrierung (ISO8601)
@@ -20,14 +19,12 @@ public class RegistrationEvent {
     @JsonCreator
     public RegistrationEvent(
             @JsonProperty("plate") String plate,
-            @JsonProperty("userId") String userId,
             @JsonProperty("role") String role,
             @JsonProperty("phoneNumber") String phoneNumber,
             @JsonProperty("timestamp") String timestamp,
             @JsonProperty("course") String course
     ) {
         this.plate = plate;
-        this.userId = userId;
         this.role = role;
         this.phoneNumber = phoneNumber;
         this.timestamp = timestamp;
@@ -36,10 +33,6 @@ public class RegistrationEvent {
 
     public String getPlate() {
         return plate;
-    }
-
-    public String getUserId() {
-        return userId;
     }
 
     public String getRole() {
@@ -62,7 +55,6 @@ public class RegistrationEvent {
     public String toString() {
         return "RegistrationEvent{" +
                 "plate='" + plate + '\'' +
-                ", userId='" + userId + '\'' +
                 ", role='" + role + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", course='" + course + '\'' +

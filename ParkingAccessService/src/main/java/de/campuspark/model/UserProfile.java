@@ -59,17 +59,4 @@ public class UserProfile {
                 ", phoneNumber='" + phoneNumber + '\'' +
                 '}';
     }
-
-    /**
-     * Factory zum Erzeugen eines Profils aus einem RegistrationEvent.
-     */
-    public static UserProfile fromRegistration(RegistrationEvent reg) {
-        return new UserProfile(
-                reg.getPlate(),
-                reg.getUserId(),
-                reg.getRole(),
-                reg.getPhoneNumber(),
-                reg.getCourse()
-        );
-    }
 }

@@ -15,27 +15,22 @@ public class DBConnection {
         return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
     }
 
-    public void insertUser(String userId, String plate, String phoneNumber, String role, String course) {
-        String sql = "INSERT INTO users (user_id, plate, phone_number, role, course) VALUES (?, ?, ?, ?) " +
-                     "ON CONFLICT (user_id) DO UPDATE SET plate = EXCLUDED.plate, phone_number = EXCLUDED.phone_number, role = EXCLUDED.role, course = EXCLUDED.course";
+    public void insertUser(String plate, String phoneNumber, String role, String course) {
+        String sql = "INSERT INTO users (plate, phone_number, role, course) VALUES (?, ?, ?, ?) " +
+                    "ON CONFLICT (plate) DO UPDATE SET phone_number = EXCLUDED.phone_number, " +
+                    "role = EXCLUDED.role, course = EXCLUDED.course";
         
         try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
-            pstmt.setString(1, userId);
-            pstmt.setString(2, plate);
-            pstmt.setString(3, phoneNumber);
-            pstmt.setString(4, role);
-            pstmt.setString(5, course);
+            pstmt.setString(1, plate);
+            pstmt.setString(2, phoneNumber);
+            pstmt.setString(3, role);
+            pstmt.setString(4, course);
             
-            int affectedRows = pstmt.executeUpdate();
-            if (affectedRows > 0) {
-                System.out.println("[DB] User " + userId + " registered/updated successfully.");
-            }
-            
+            pstmt.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("[DB ERROR] Could not insert/update user: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("[DB ERROR] " + e.getMessage());
         }
     }
 
@@ -65,4 +60,5 @@ public class DBConnection {
         
         return user;
     }
+
 }

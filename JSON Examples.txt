@@ -1,0 +1,31 @@
+SpotState Messages: parking/state/spot/#
+JSON:
+{
+    spotId:"A-01",
+    state:"occupied", (oder reserved / free)
+    plate:"MOS-QW-123",
+    arrivalTime:"2025-12-18T16:15:00",
+    estimatedDepartureTime:"2025-12-18T16:15:00"
+}
+
+Spot Summary: parking/state/summary
+Nur ein Int-Wert, z.B.: 25
+
+Move Request: parking/move/request
+JSON:
+{
+    plate:"MOS-QW-123",
+    requestedBy:"Webservice",
+    timestamp:"2025-12-18T16:15:00"
+}
+
+RegistrationEvent: parking/registration/plate
+JSON:
+{
+    plate:"MOS-QW-123",
+    role:"student", (oder teacher / staff)
+    phoneNumber:"+49123123123",
+    course:"WWI23A", (genau wie die Kurse in stuv.app benannt werden)
+    timestamp:"2025-12-18T16:15:00"
+}
+

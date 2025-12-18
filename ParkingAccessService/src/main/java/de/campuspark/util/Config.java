@@ -25,4 +25,6 @@ public class Config {
     public static final String DB_URL = dotenv.get("DB_URL");
     public static final String DB_USER = dotenv.get("DB_USER");
     public static final String DB_PASSWORD = dotenv.get("DB_PASSWORD");
+
+    public static final String STUV_BASE_URL = dotenv.get("STUV_BASE_URL");
 }

@@ -2,51 +2,66 @@ package de.campuspark.logic;
 
 import java.time.Instant;
 
+import de.campuspark.model.UserProfile;
+import de.campuspark.service.CalendarService;
+
 public class SpotInfo {
     public enum State { free, reserved, occupied }
 
     private final String spotId;
     private State state;
-    private String assignedPlate;
+    private UserProfile user;
     
     private Instant arrivalTime;
-    private Instant estimatedDepartureTime; // Placeholder für Ihre Kursplan-Logik
+    private Instant estimatedDepartureTime;
 
     public SpotInfo(String spotId) {
         this.spotId = spotId;
-        setFree(); // Initialzustand
+        setFree(); 
     }
 
     public void reserveFor(String plate) {
+        this.user = UserRegistry.findByPlate(plate);
         this.state = State.reserved;
-        this.assignedPlate = plate;
-        // Bei Reservierung gibt es noch keine Ankunftszeit
         this.arrivalTime = null; 
+        this.estimatedDepartureTime = null;
     }
 
     public void occupyBy(String plate) {
-        // Nur wenn wir nicht schon occupied waren, setzen wir die Ankunftszeit neu
-        // (verhindert Updates bei Sensor-Flackern)
-        if (this.state != State.occupied) {
-            this.arrivalTime = Instant.now();
-        }
         this.state = State.occupied;
-        this.assignedPlate = plate;
+        this.user = UserRegistry.findByPlate(plate);
+        this.arrivalTime = Instant.now();
+        if(!user.getCourse().isBlank() || user.getCourse() != null || user.getRole() == "student"){
+            this.estimatedDepartureTime = CalendarService.getEstimatedEndTime(user);
+        }
     }
 
     public void setFree() {
         this.state = State.free;
-        this.assignedPlate = null;
+        this.user = null;
         this.arrivalTime = null;
         this.estimatedDepartureTime = null;
     }
 
     // --- Getter für den Export ---
-    public String getSpotId() { return spotId; }
-    public State getState() { return state; }
-    public String getAssignedPlate() { return assignedPlate; }
-    public Instant getArrivalTime() { return arrivalTime; }
-    public Instant getEstimatedDepartureTime() { return estimatedDepartureTime; }
+    public String getSpotId() { 
+        return spotId; 
+    }
+
+    public State getState() { 
+        return state; 
+    }
+
+    public String getAssignedPlate() { 
+        return user.getPlate(); 
+    }
+
+    public Instant getArrivalTime() { 
+        return arrivalTime; 
+    }
+
+    public Instant getEstimatedDepartureTime() { 
+        return estimatedDepartureTime; 
+    }
     
-    // TODO: Setter für EstimatedDepartureTime hinzufügen, sobald der Kursplan angebunden ist
 }

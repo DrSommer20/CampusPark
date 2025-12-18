@@ -15,9 +15,9 @@ public class DBConnection {
         return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
     }
 
-    public void insertUser(String userId, String plate, String phoneNumber, String role) {
-        String sql = "INSERT INTO users (user_id, plate, phone_number, role) VALUES (?, ?, ?, ?) " +
-                     "ON CONFLICT (user_id) DO UPDATE SET plate = EXCLUDED.plate, phone_number = EXCLUDED.phone_number, role = EXCLUDED.role";
+    public void insertUser(String userId, String plate, String phoneNumber, String role, String course) {
+        String sql = "INSERT INTO users (user_id, plate, phone_number, role, course) VALUES (?, ?, ?, ?) " +
+                     "ON CONFLICT (user_id) DO UPDATE SET plate = EXCLUDED.plate, phone_number = EXCLUDED.phone_number, role = EXCLUDED.role, course = EXCLUDED.course";
         
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -26,6 +26,7 @@ public class DBConnection {
             pstmt.setString(2, plate);
             pstmt.setString(3, phoneNumber);
             pstmt.setString(4, role);
+            pstmt.setString(5, course);
             
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
@@ -39,7 +40,7 @@ public class DBConnection {
     }
 
     public UserProfile findUserByPlate(String plate) {
-        String sql = "SELECT user_id, phone_number, role FROM users WHERE plate = ?";
+        String sql = "SELECT user_id, phone_number, role, course FROM users WHERE plate = ?";
         UserProfile user = null;
         
         try (Connection conn = getConnection();
@@ -52,7 +53,8 @@ public class DBConnection {
                     String userId = rs.getString("user_id");
                     String phoneNumber = rs.getString("phone_number");
                     String role = rs.getString("role");
-                    user = new UserProfile(plate, userId, role, phoneNumber);
+                    String course = rs.getString("course");
+                    user = new UserProfile(plate, userId, role, phoneNumber, course);
                 }
             }
             

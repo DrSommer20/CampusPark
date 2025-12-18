@@ -13,18 +13,21 @@ public class UserProfile {
     private final String userId;         // interne ID
     private final String role;           // Rolle des Nutzers
     private final String phoneNumber;    // Nummer für SMS
+    private final String course;         // Kurs im Style "WWI23A"
 
     @JsonCreator
     public UserProfile(
             @JsonProperty("plate") String plate,
             @JsonProperty("userId") String userId,
             @JsonProperty("role") String role,
-            @JsonProperty("phoneNumber") String phoneNumber
+            @JsonProperty("phoneNumber") String phoneNumber,
+            @JsonProperty("course") String course
     ) {
         this.plate = plate;
         this.userId = userId;
         this.role = role;
         this.phoneNumber = phoneNumber;
+        this.course = course;
     }
 
     public String getPlate() {
@@ -41,6 +44,10 @@ public class UserProfile {
 
     public String getPhoneNumber() {
         return phoneNumber;
+    }
+
+    public String getCourse(){
+        return course;
     }
 
     @Override
@@ -61,7 +68,8 @@ public class UserProfile {
                 reg.getPlate(),
                 reg.getUserId(),
                 reg.getRole(),
-                reg.getPhoneNumber()
+                reg.getPhoneNumber(),
+                reg.getCourse()
         );
     }
 }

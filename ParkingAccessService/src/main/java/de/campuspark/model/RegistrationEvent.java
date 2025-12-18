@@ -15,6 +15,7 @@ public class RegistrationEvent {
     private final String role;         // z.B. student, mitarbeiter, professor, behindert
     private final String phoneNumber;  // für SMS-Notifications
     private final String timestamp;    // Zeitpunkt der Registrierung (ISO8601)
+    private final String course;       // Kurs im Style ""WWI23A" falls Student 
 
     @JsonCreator
     public RegistrationEvent(
@@ -22,13 +23,15 @@ public class RegistrationEvent {
             @JsonProperty("userId") String userId,
             @JsonProperty("role") String role,
             @JsonProperty("phoneNumber") String phoneNumber,
-            @JsonProperty("timestamp") String timestamp
+            @JsonProperty("timestamp") String timestamp,
+            @JsonProperty("course") String course
     ) {
         this.plate = plate;
         this.userId = userId;
         this.role = role;
         this.phoneNumber = phoneNumber;
         this.timestamp = timestamp;
+        this.course = course;
     }
 
     public String getPlate() {
@@ -51,6 +54,10 @@ public class RegistrationEvent {
         return timestamp;
     }
 
+    public String getCourse(){
+        return this.course;
+    }
+
     @Override
     public String toString() {
         return "RegistrationEvent{" +
@@ -58,6 +65,7 @@ public class RegistrationEvent {
                 ", userId='" + userId + '\'' +
                 ", role='" + role + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
+                ", course='" + course + '\'' +
                 ", timestamp='" + timestamp + '\'' +
                 '}';
     }

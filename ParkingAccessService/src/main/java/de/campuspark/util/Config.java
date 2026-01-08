@@ -8,7 +8,7 @@ public class Config {
     public static final String MQTT_BROKER = dotenv.get("MQTT_BROKER");
     public static final String MQTT_USERNAME = dotenv.get("MQTT_USERNAME");
     public static final String MQTT_PASSWORD = dotenv.get("MQTT_PASSWORD");
-    public static final String MQTT_CLIENT_ID = dotenv.get("MQTT_CLIENT_ID");
+    public static final String MQTT_CLIENT_ID = "Desktop-Test-" + java.util.UUID.randomUUID().toString();//dotenv.get("MQTT_CLIENT_ID");
 
     public static final String TOPIC_REGISTRATION  = dotenv.get("TOPIC_REGISTRATION");
     public static final String TOPIC_LICENSE_PLATE = dotenv.get("TOPIC_LICENSE_PLATE");

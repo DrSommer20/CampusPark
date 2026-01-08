@@ -31,7 +31,7 @@ public class SpotInfo {
         this.state = State.occupied;
         this.user = UserRegistry.findByPlate(plate);
         this.arrivalTime = Instant.now();
-        if(!user.getCourse().isBlank() || user.getCourse() != null || user.getRole() == "student"){
+        if(user != null || !user.getCourse().isBlank() || user.getCourse() != null || user.getRole() == "student"){
             this.estimatedDepartureTime = CalendarService.getEstimatedEndTime(user);
         }
     }
@@ -52,8 +52,11 @@ public class SpotInfo {
         return state; 
     }
 
-    public String getAssignedPlate() { 
-        return user.getPlate(); 
+    public String getAssignedPlate() {
+        if (user == null || user.getPlate() == null) {
+            return "UNKNOWN";
+        }
+        return user.getPlate();
     }
 
     public Instant getArrivalTime() { 

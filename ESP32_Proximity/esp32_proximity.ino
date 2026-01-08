@@ -4,12 +4,12 @@
 // -------- CONFIGURATION CONSTANTS --------
 
 // WLAN-DATEN
-const char* ssid          = "";
+const char* ssid          = "MyCampusParkWifi";
 const char* password      = "";
 
 // MQTT-DATEN
-const char* mqtt_server   = "";
-const uint16_t mqtt_port  = 1887;
+const char* mqtt_server   = "192.168.4.1";
+const uint16_t mqtt_port  = 1883;
 const char* mqttUser      = "";
 const char* mqttPassword  = "";
 
@@ -17,26 +17,29 @@ const char* mqttPassword  = "";
 const float DISTANCE_THRESHOLD_CM = 20.0;
 
 // TIME CONSTANTS
-const unsigned long HOLD_TIME_MS      = 20000; 
+const unsigned long HOLD_TIME_MS      = 20000;
 const unsigned long HEARTBEAT_INTERVAL_MS = 60000;
 
 // SENSOR 1
 const int TRIG_PIN_1 = 14;
 const int ECHO_PIN_1 = 27;
-const char* MQTT_TOPIC_1 = "parking/raw/spot/A-01";
-bool lastState_1 = false;                 
-bool currentState_1 = false;          
-unsigned long holdTimer_1 = 0;          
-unsigned long heartbeatTimer_1 = 0;   
+const char* MQTT_TOPIC_1 = "parking/raw/spot/A-08";
+bool lastState_1 = false;
+bool currentState_1 = false;
+unsigned long holdTimer_1 = 0;
+unsigned long heartbeatTimer_1 = 0;
 
 // SENSOR 2
 const int TRIG_PIN_2 = 33;
 const int ECHO_PIN_2 = 25;
-const char* MQTT_TOPIC_2 = "parking/raw/spot/A-02";
+const char* MQTT_TOPIC_2 = "parking/raw/spot/A-07";
 bool lastState_2 = false;
 bool currentState_2 = false;
 unsigned long holdTimer_2 = 0;
 unsigned long heartbeatTimer_2 = 0;
+
+//delay for loop to nolonger DDOS the MQTT Server
+unsigned long lastReconnectAttempt = 0;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -57,28 +60,29 @@ void setupWifi() {
 }
 
 void reconnectMqtt() {
-  while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-    String clientId = "esp32-spot-";
-    clientId += String((uint32_t)ESP.getEfuseMac(), HEX);
+  // Attempt to connect
+  Serial.print("Attempting MQTT connection...");
 
-    // Attempt to connect
-    if (client.connect(clientId.c_str(), mqttUser, mqttPassword)) {
-      Serial.println("verbunden!");
-    } else {
-      Serial.print("fehlgeschlagen, rc=");
-      Serial.print(client.state());
-      Serial.println(". in 5 Sekunden erneut versuchen");
-      delay(5000);
-    }
+  // Create a truly unique ID using the full MAC
+  uint64_t chipid = ESP.getEfuseMac();
+  char clientId[25];
+  sprintf(clientId, "esp32-%04X%08X", (uint16_t)(chipid >> 32), (uint32_t)chipid);
+
+  // Attempt to connect
+  if (client.connect(clientId, mqttUser, mqttPassword)) {
+    Serial.println("verbunden!");
+  } else {
+    Serial.print("fehlgeschlagen, rc=");
+    Serial.print(client.state());
+    Serial.println(". in 5 Sekunden erneut versuchen");
+    delay(5000);
   }
 }
 
 void publishSensorState(bool occupied, const char* topic) {
   const char* payload = occupied ? "occupied" : "free";
 
-  // ONLY FOR DEBUG / DEVELOPMENT: Retain = true: The broker keeps the last message and sends it to new subscribers.
-  if (client.publish(topic, payload, true)) {
+  if (client.publish(topic, payload, false)) {
     Serial.print("MQTT published to ");
     Serial.print(topic);
     Serial.print(": ");
@@ -88,17 +92,10 @@ void publishSensorState(bool occupied, const char* topic) {
   }
 }
 
-/**
- * @brief Reads the ultrasonic sensor, determines occupancy, and publishes the state if it has changed.
- *
- * @param trigPin The ESP32 pin connected to the TRIG pin of the sensor.
- * @param echoPin The ESP32 pin connected to the ECHO pin of the sensor.
- * @param lastState Reference to the variable storing the previous occupancy state.
- * @param topic The MQTT topic to publish to.
- */
-void updateSensorState(int trigPin, int echoPin, const char* topic, 
+
+void updateSensorState(int trigPin, int echoPin, const char* topic,
                        bool& lastState, bool& currentState, unsigned long& holdTimer, unsigned long& heartbeatTimer) {
-  
+
   //MESSUNG
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
@@ -125,12 +122,11 @@ void updateSensorState(int trigPin, int echoPin, const char* topic,
     // State differs from the last pulished State
     if (currentTime - holdTimer >= HOLD_TIME_MS) {
       publishSensorState(currentState, topic);
-      lastState = currentState; 
-      heartbeatTimer = currentTime; 
+      lastState = currentState;
+      heartbeatTimer = currentTime;
     }
   }
 
-  //HEARTBEAT => Sends State of Sensor after a fixed Time Period
   if (currentTime - heartbeatTimer >= HEARTBEAT_INTERVAL_MS) {
     publishSensorState(lastState, topic);
     heartbeatTimer = currentTime;
@@ -154,15 +150,20 @@ void setup() {
 
 void loop() {
   if (!client.connected()) {
-    reconnectMqtt();
+    unsigned long now = millis();
+    if (now - lastReconnectAttempt > 5000) {
+      lastReconnectAttempt = now;
+      reconnectMqtt();
+    }
+  } else {
+    client.loop();
   }
-  client.loop();
 
-  updateSensorState(TRIG_PIN_1, ECHO_PIN_1, MQTT_TOPIC_1, 
+  updateSensorState(TRIG_PIN_1, ECHO_PIN_1, MQTT_TOPIC_1,
                     lastState_1, currentState_1, holdTimer_1, heartbeatTimer_1);
 
-  updateSensorState(TRIG_PIN_2, ECHO_PIN_2, MQTT_TOPIC_2, 
+  updateSensorState(TRIG_PIN_2, ECHO_PIN_2, MQTT_TOPIC_2,
                     lastState_2, currentState_2, holdTimer_2, heartbeatTimer_2);
 
-  delay(100);
+  delay(500);
 }

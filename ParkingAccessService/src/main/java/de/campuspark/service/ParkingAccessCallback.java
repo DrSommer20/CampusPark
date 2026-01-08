@@ -21,11 +21,15 @@ public class ParkingAccessCallback implements MqttCallback {
     @Override
     public void connectionLost(Throwable cause) {
         System.err.println("[ERROR] MQTT connection lost: " + cause.getLocalizedMessage());
+        cause.printStackTrace();
     }
 
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
 
+
+        try {
+        
         String payload = new String(message.getPayload(), StandardCharsets.UTF_8);
         // Debug Log etwas gekürzt, damit bei vielen Sensoren die Konsole nicht explodiert
         //if(!topic.startsWith(Config.TOPIC_SPOT.replace("#", ""))) {
@@ -45,6 +49,9 @@ public class ParkingAccessCallback implements MqttCallback {
         else if (topic.startsWith(Config.TOPIC_SPOT.replace("#",""))) {
             handleSpotUpdate(topic, payload);
         }
+    } catch (Exception e) {
+        e.printStackTrace(); // This will show you the real killer
+    }
     }
 
     @Override

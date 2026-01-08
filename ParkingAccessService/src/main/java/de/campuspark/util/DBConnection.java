@@ -1,13 +1,16 @@
 package de.campuspark.util;
 
-import de.campuspark.model.UserProfile;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-import java.sql.*;
+import de.campuspark.model.UserProfile;
 
 public class DBConnection {
 
-    // --- Configuration (Adapt these to your actual database settings) ---
-    private static final String DB_URL = Config.DB_URL; // e.g., "jdbc:postgresql://localhost:5432/campus_park"
+    private static final String DB_URL = Config.DB_URL; 
     private static final String DB_USER = Config.DB_USER;
     private static final String DB_PASSWORD = Config.DB_PASSWORD;
 

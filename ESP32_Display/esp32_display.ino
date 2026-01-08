@@ -1,135 +1,142 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <Adafruit_GFX.h>
-#include <Adafruit_ST7735.h>
-#include <SPI.h>
+#include <Adafruit_SSD1306.h>
+#include <Wire.h>
 
-//TFT Pins
-#define TFT_CS   2  
-#define TFT_DC   5  
-#define TFT_RST  4   
-#define TFT_MOSI 25 
-#define TFT_SCLK 18  
+// OLED Configuration
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET    -1
+#define SCREEN_ADDRESS 0x3C
 
-// WLAN-DATEN
+// WLAN Credentials
 const char* ssid          = "";
 const char* password      = "";
 
-// MQTT-DATEN
-const char* mqtt_server   = "";
+// MQTT Configuration
+const char* mqtt_server   = "192.168.4.1";
 const uint16_t mqtt_port  = 1883;
 const char* mqttUser      = "";
 const char* mqttPassword  = "";
+const char* topic_summary = "parking/state/summary";
 
-const char* topic_sub     = "parking/state/summary";
-
-Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
+// Objects
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-void tftPrintCenter(const String &text, uint8_t textSize, uint16_t color, int16_t y) {
-  tft.setTextSize(textSize);
-  tft.setTextColor(color, ST77XX_BLACK);
+unsigned long lastReconnectAttempt = 0;
+
+// Helper to center text easily
+void displayPrintCenter(const String &text, uint8_t textSize, int16_t y) {
+  display.setTextSize(textSize);
+  display.setTextColor(SSD1306_WHITE);
+
   int16_t x1, y1;
   uint16_t w, h;
-  tft.getTextBounds(text, 0, y, &x1, &y1, &w, &h);
-  int16_t x = (tft.width() - w) / 2;
+  display.getTextBounds(text, 0, y, &x1, &y1, &w, &h);
+  int16_t x = (SCREEN_WIDTH - w) / 2;
 
-  tft.fillRect(0, y, tft.width(), h, ST77XX_BLACK);
-  tft.setCursor(x, y);
-  tft.print(text);
+  display.setCursor(x, y);
+  display.print(text);
+}
+
+// Main Display Update Logic
+void updateDisplay(String value) {
+  display.clearDisplay();
+
+  // Header
+  displayPrintCenter("CAMPUS PARK", 1, 4);
+
+  // Divider Line
+  display.drawFastHLine(0, 15, SCREEN_WIDTH, SSD1306_WHITE);
+
+  // Large Number
+  displayPrintCenter(value, 4, 24);
+
+  // Footer (Using AE for stability)
+  displayPrintCenter("FREIE PLAETZE", 1, 56);
+
+  display.display();
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  tft.fillScreen(ST77XX_BLACK);
-  // Parse Payload to String
-  String msg;
-  for (unsigned int i = 0; i < length; i++) {
-    msg += (char)payload[i];
-  }
+  if (strcmp(topic, topic_summary) == 0) {
+    // Convert raw byte payload to string
+    char msg[length + 1];
+    memcpy(msg, payload, length);
+    msg[length] = '\0';
 
-  msg.trim();
-  int count = atoi(msg.c_str());
-
-  if (count <= 0) 
-    tftPrintCenter("Parkplatz belegt", 3, ST77XX_RED, 30); 
-  } else {
-    uint16_t color = (count < 5) ? ST77XX_YELLOW : ST77XX_GREEN;
-    tftPrintCenter("Freie Plaetze", 2, color, 20); 
-    tftPrintCenter(String(count), 4, color, 50); 
+    updateDisplay(String(msg));
+    Serial.print("Summary Updated: ");
+    Serial.println(msg);
   }
 }
 
 void setupWifi() {
+  delay(10);
+  Serial.println("Connecting to WiFi...");
   WiFi.begin(ssid, password);
 
-  tftPrintCenter("Verbinde WLAN", 1, ST77XX_WHITE, 20);
+  display.clearDisplay();
+  displayPrintCenter("WIFI CONNECT", 1, 28);
+  display.display();
 
-  uint8_t dots = 0;
   while (WiFi.status() != WL_CONNECTED) {
-    delay(400);
-    dots = (dots + 1) % 4;
-    String line = "Verbinde";
-    for (uint8_t i = 0; i < dots; i++) line += ".";
-    tftPrintCenter(line, 1, ST77XX_CYAN, 35);
+    delay(500);
+    Serial.print(".");
   }
 
-  tftPrintCenter("WLAN OK", 1, ST77XX_GREEN, 20);
+  Serial.println("\nWiFi connected");
 }
 
 void reconnect() {
-  while (!client.connected()) {
-    tftPrintCenter("MQTT Connect", 1, ST77XX_WHITE, 70);
+  // Create unique ID based on MAC
+  uint64_t chipid = ESP.getEfuseMac();
+  char clientId[30];
+  sprintf(clientId, "esp32-summary-%04X%08X", (uint16_t)(chipid >> 32), (uint32_t)chipid);
 
-    String clientId = "esp32-display-";
-    clientId += String((uint32_t)ESP.getEfuseMac(), HEX);
+  Serial.print("Attempting MQTT connection...");
+  if (client.connect(clientId, mqttUser, mqttPassword)) {
+    Serial.println("connected");
+    client.subscribe(topic_summary);
 
-    bool ok;
-    if (strlen(mqttUser) > 0) {
-      ok = client.connect(clientId.c_str(), mqttUser, mqttPassword);
-    } else {
-      ok = client.connect(clientId.c_str());
-    }
-
-    if (ok) {
-      client.subscribe(topic_sub);
-      tftPrintCenter("MQTT OK", 1, ST77XX_GREEN, 85);
-    } else {
-      tftPrintCenter("MQTT FAIL", 1, ST77XX_RED, 85);
-      delay(3000);
-    }
+    // Initial screen state after connection
+    display.clearDisplay();
+    displayPrintCenter("WARTE AUF DATEN", 1, 28);
+    display.display();
+  } else {
+    Serial.print("failed, rc=");
+    Serial.println(client.state());
   }
 }
 
-
 void setup() {
-  delay(500);
+  Serial.begin(115200);
 
-  // TFT initialisieren
-  tft.initR(INITR_BLACKTAB);
-  tft.setRotation(1);
-  tft.fillScreen(ST77XX_BLACK);
+  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
 
-  tftPrintCenter("Parking Display", 1, ST77XX_WHITE, 5);
+  display.clearDisplay();
+  display.display();
 
-  // WLAN
   setupWifi();
-
-  // MQTT
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
-
-  reconnect();
-
-  // Startzustand anzeigen
-  tftPrintCenter("Warte auf", 1, ST77XX_WHITE, 35);
-  tftPrintCenter("MQTT-Daten", 1, ST77XX_WHITE, 50);
 }
-
 
 void loop() {
   if (!client.connected()) {
-    reconnect();
+    unsigned long now = millis();
+    if (now - lastReconnectAttempt > 5000) {
+      lastReconnectAttempt = now;
+      reconnect();
+    }
+  } else {
+    client.loop();
   }
-  client.loop();
 }

@@ -109,13 +109,13 @@ public class ParkingAccessCallback implements MqttCallback {
              return;
         }
 
-        NotificationEvent notif = NotificationEvent.fromMoveRequest(moveReq, user);
-        String notifJson = mapper.writeValueAsString(notif);
+        // NotificationEvent notif = NotificationEvent.fromMoveRequest(moveReq, user);
+        // String notifJson = mapper.writeValueAsString(notif);
 
-        client.publish(
-                Config.TOPIC_NOTIFICATION,
-                new MqttMessage(notifJson.getBytes(StandardCharsets.UTF_8))
-        );
+        // client.publish(
+        //         Config.TOPIC_NOTIFICATION,
+        //         new MqttMessage(notifJson.getBytes(StandardCharsets.UTF_8))
+        // );
     }
 
     private void handleSpotUpdate(String topic, String payload) throws Exception {

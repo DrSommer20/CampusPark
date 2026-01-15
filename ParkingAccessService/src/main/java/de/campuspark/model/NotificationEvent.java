@@ -14,7 +14,6 @@ public class NotificationEvent {
     private final String phoneNumber;   // Empfänger-Nummer
     private final String messageType;   // z.B. "RELOCATE", "WARNING", "INFO"
     private final String message;       // tatsächlicher Text
-    private final String deadline;      // optional, z.B. "2025-11-25T11:30:00Z"
 
     @JsonCreator
     public NotificationEvent(
@@ -22,15 +21,13 @@ public class NotificationEvent {
             @JsonProperty("userId") String userId,
             @JsonProperty("phoneNumber") String phoneNumber,
             @JsonProperty("messageType") String messageType,
-            @JsonProperty("message") String message,
-            @JsonProperty("deadline") String deadline
+            @JsonProperty("message") String message
     ) {
         this.plate = plate;
         this.userId = userId;
         this.phoneNumber = phoneNumber;
         this.messageType = messageType;
         this.message = message;
-        this.deadline = deadline;
     }
 
     public String getPlate() {
@@ -53,10 +50,6 @@ public class NotificationEvent {
         return message;
     }
 
-    public String getDeadline() {
-        return deadline;
-    }
-
     @Override
     public String toString() {
         return "NotificationEvent{" +
@@ -65,21 +58,7 @@ public class NotificationEvent {
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", messageType='" + messageType + '\'' +
                 ", message='" + message + '\'' +
-                ", deadline='" + deadline + '\'' +
                 '}';
     }
 
-    /**
-     * Convenience factory: erstellt eine Notification für einen MoveRequest.
-     */
-    public static NotificationEvent fromMoveRequest(MoveRequestEvent moveReq, UserProfile userProfile) {
-        return new NotificationEvent(
-                moveReq.getPlate(),
-                userProfile.getUserId(),
-                userProfile.getPhoneNumber(),
-                "RELOCATE",
-                "Ihr Fahrzeug (" + moveReq.getPlate() + ") soll umgeparkt werden. Grund: " , //TODO: REASON for Relocaction
-                null // optional
-        );
-    }
 }

@@ -18,7 +18,7 @@ const uint16_t close_angle = 75;
 #define OLED_RESET    -1
 #define SCREEN_ADDRESS 0x3C
 
-// WLAN-DATEN
+// WIFI-DATEN
 const char* ssid          = "";
 const char* password      = "";
 
@@ -30,6 +30,7 @@ const char* mqttPassword  = "";
 const char* topic_display = "parking/access/allocation";
 const char* topic_barrier = "parking/access/barrier";
 
+//Creation of Objects for WIFI, OLED and MQTT
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -55,6 +56,7 @@ void displayPrintCenter(const String &text, uint8_t textSize, int16_t y) {
   display.display();
 }
 
+//Helper funktion to Display Message when no MQTT-Message is displayed
 void showWelcomeScreen() {
   closeGate();
   display.clearDisplay();
@@ -64,14 +66,17 @@ void showWelcomeScreen() {
   isActive = false;
 }
 
+//Funktion to move the Servo to open the Gate
 void openGate(){
   barrierServo.write(open_angle);
 }
 
+//Funktion to move the Servo to close the Gate
 void closeGate(){
   barrierServo.write(close_angle);
 }
 
+//Function to define the Process, when a MQTT Message os recieved
 void callback(char* topic, byte* payload, unsigned int length) {
   StaticJsonDocument<256> doc;
   DeserializationError error = deserializeJson(doc, payload, length);

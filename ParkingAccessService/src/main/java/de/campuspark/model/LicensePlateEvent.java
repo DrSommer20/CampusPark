@@ -4,13 +4,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Event, das vom Raspberry Pi Zero (ALPR Service) erzeugt wird.
+ * Event, das vom Raspberry Pi 3b+ (ALPR Service) erzeugt wird.
  * Es enthält ein erfasstes Kennzeichen + Kontextinformationen zur Einfahrt.
  */
 public class LicensePlateEvent {
 
     private final String plate;       // Das erkannte Kennzeichen
-    private final String gateId;      // Name/ID der Einfahrt (z.B. "Einfahrt-Nord")
+    private final String gateId;      // Name/ID der Einfahrt (z.B. "Main-Gate")
     private final String timestamp;   // ISO8601 Zeitstempel der Erkennung
     private final double confidence;  // Wahrscheinlichkeit/Qualität (0.0 - 1.0)
 

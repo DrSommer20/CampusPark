@@ -29,9 +29,10 @@ public class SpotInfo {
 
     public void occupyBy(String plate) {
         this.state = State.occupied;
-        this.user = UserRegistry.findByPlate(plate);
+        if(plate == "UNKNOWN") this.user = UserRegistry.DummyUser();
+        else this.user = UserRegistry.findByPlate(plate);
         this.arrivalTime = Instant.now();
-        if(user != null || !user.getCourse().isBlank() || user.getCourse() != null || user.getRole() == "student"){
+        if(user != null && ( !user.getCourse().isBlank() || user.getCourse() != null || user.getRole() == "student")){
             this.estimatedDepartureTime = CalendarService.getEstimatedEndTime(user);
         }
     }
@@ -65,6 +66,10 @@ public class SpotInfo {
 
     public Instant getEstimatedDepartureTime() { 
         return estimatedDepartureTime; 
+    }
+
+    public String toString(){
+        return "Spot " + spotId + " Status: " + state + " User: " + user.getPlate();
     }
     
 }

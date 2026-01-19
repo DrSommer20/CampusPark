@@ -43,7 +43,9 @@ public class SpotAllocator {
         if (isSensorOccupied != isSpotLogicallyOccupied) {
                 
             if (isSensorOccupied) {
+                System.out.println("In isSensor Occupied car arrival");
                 handleCarArrival(currentSpot);
+
             } else {
                 handleCarDeparture(currentSpot);
             }
@@ -72,11 +74,12 @@ public class SpotAllocator {
                 freeReservationForUser(potentialWrongParker);
                 spot.occupyBy(potentialWrongParker);
             } else {
+                System.out.println("[MANAGER] WARNING: User UNKNOWN parked on wrong spot " + spot.getSpotId());
+                
                 spot.occupyBy("UNKNOWN");
-                //TODO: Benachritigung auslösen an Admin
+                System.out.println(spot);
             }
         }
-        // Fall C: Bereits OCCUPIED (Sensor flattert oder Fehler) -> Ignorieren
     }
 
     private static void handleCarDeparture(SpotInfo spot) {

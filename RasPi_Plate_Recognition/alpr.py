@@ -32,9 +32,8 @@ latest_result = {"plate": "Waiting...", "timestamp": "-", "status": "Idle"}
 def lpr_worker():
     global latest_result
     avg = None
-    print("🚀 LPR Worker Started...")
+    print("LPR Worker Started...")
     while True:
-        # Capture with flip settings
         subprocess.run([
             "rpicam-still", "-t", "1", "-o", TEMP_FILE,  
             "--width", "640", "--height", "480", "--immediate", "--nopreview", 
@@ -71,8 +70,14 @@ def lpr_worker():
                         
                         if conf > 75:
                             timestamp = time.strftime("%H:%M:%S")
-                            client.publish(MQTT_TOPIC, plate)
-                            print(f"Published: {plate} ({conf}%)")
+                            payload = empty object
+                            payload["confidence"] = conf
+                            payload["plate"] = plate
+                            payload["timestamp"] = now()
+
+                            jsonString = serialize(payload)
+                            client.publish(MQTT_TOPIC, jsonString)
+                            print(f"MQTT Published: {plate} ({conf}%)")
                             time.sleep(5) 
                 except:
                     pass

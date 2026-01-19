@@ -5,7 +5,7 @@
 
 // --- CONFIGURATION ---
 const MQTT_CONFIG = {
-    host: 'wss://localhost:1883', 
+    host: '192.168.4.1', 
     // Topics
     topic_spot_state: 'parking/state/spot',  // + /#
     topic_summary: 'parking/state/summary',
@@ -14,8 +14,11 @@ const MQTT_CONFIG = {
     topic_registration: 'parking/registration/plate'
 };
 
+const availableSpot = 10;
+
 // Global App State
 let mqttClient = null;
+
 
 // --- Initialization ---
 
@@ -34,21 +37,22 @@ function connectMQTT() {
     logEvent("System: Establishing secure link...");
 
     try {
-        const url = new URL(MQTT_CONFIG.host);
+        const port = 9001; 
+        
         const clientId = "sp_web_" + Math.random().toString(16).substr(2, 6);
         
-        mqttClient = new Paho.MQTT.Client(url.hostname, Number(url.port), url.pathname, clientId);
-        
+        mqttClient = new Paho.MQTT.Client(MQTT_CONFIG.host, port, clientId);
         mqttClient.onConnectionLost = onConnectionLost;
         mqttClient.onMessageArrived = onMessageArrived;
 
         mqttClient.connect({
             onSuccess: onConnectSuccess,
             onFailure: onConnectFailure,
-            useSSL: url.protocol === 'wss:',
-            reconnect: true
+            //reconnect: true
         });
+
     } catch (e) {
+        console.error(e); // Added console log for debugging
         logEvent("Config Error: Invalid Host URL.");
         updateConnectionUI('disconnected');
     }
@@ -93,8 +97,8 @@ function onMessageArrived(msg) {
     }
     // 2. Handle Summary (Int)
     else if (topic === MQTT_CONFIG.topic_summary) {
-        // payload is just an Integer, e.g. "25"
-        document.getElementById('stat-summary').textContent = payloadStr;
+        document.getElementById('stat-summary').textContent = availableSpot - payloadStr;
+        document.getElementById('stat-available').textContent = payloadStr;
     }
 }
 
@@ -146,6 +150,8 @@ function refreshCount() {
     // Simple frontend count of "available" class
     const free = document.querySelectorAll('.spot-card.available').length;
     document.getElementById('stat-available').textContent = free;
+
+
 }
 
 function updateConnectionUI(status) {
@@ -153,8 +159,11 @@ function updateConnectionUI(status) {
     const dot = container.querySelector('.status-dot');
     const text = container.querySelector('.status-text');
 
+    if (!container || !dot || !text) return;
+
     container.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black border transition-colors duration-300";
-    dot.className = "w-2 h-2 rounded-full";
+    
+    dot.className = "w-2 h-2 rounded-full status-dot"; 
 
     if (status === 'connected') {
         container.classList.add('bg-green-50', 'text-green-700', 'border-green-200');

@@ -18,6 +18,8 @@ const uint16_t close_angle = 75;
 #define OLED_RESET    -1
 #define SCREEN_ADDRESS 0x3C
 
+
+
 // WIFI-DATEN
 const char* ssid          = "";
 const char* password      = "";

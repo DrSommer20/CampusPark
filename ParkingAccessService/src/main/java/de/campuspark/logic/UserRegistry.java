@@ -15,4 +15,8 @@ public class UserRegistry {
     public static UserProfile findByPlate(String plate) {
         return dbconnection.findUserByPlate(plate);
     }
+
+    public static UserProfile DummyUser(){
+        return new UserProfile("UNKNOWN", "-1", "UNKNOWN", "", "");
+    }
 }

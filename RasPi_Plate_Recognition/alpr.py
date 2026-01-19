@@ -4,23 +4,24 @@ import os
 import time
 import json
 import paho.mqtt.client as mqtt
+from paho.mqtt.client import CallbackAPIVersion
 from threading import Thread
 
 # --- CONFIG FROM ENV ---
-MQTT_BROKER = os.getenv("MQTT_BROKER", "192.168.1.XX")
-MQTT_TOPIC  = os.getenv("MQTT_TOPIC", "garage/plates")
-MQTT_USER   = os.getenv("MQTT_USER", None)
-MQTT_PASS   = os.getenv("MQTT_PASS", None)
-MOTION_THRESHOLD = int(os.getenv("MOTION_THRESHOLD", 500))
+MQTT_BROKER = "localhost"
+MQTT_TOPIC  = "parking/access/licensePlate"
+MQTT_USER   = ""
+MQTT_PASS   = ""
+MOTION_THRESHOLD = 500
 TEMP_FILE = "/dev/shm/plate_capture.jpg"
 
 # --- MQTT SETUP ---
-client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1)
-if MQTT_USER and MQTT_PASS:
-    client.username_pw_set(MQTT_USER, MQTT_PASS)
+client = mqtt.Client(CallbackAPIVersion.VERSION2,
+                     client_id="alpr-client")
+client.username_pw_set(MQTT_USER, MQTT_PASS)
 
-def on_connect(client, userdata, flags, rc):
-    print(f"✅ Connected to MQTT with result code {rc}")
+def on_connect(client, userdata, flags, reason_code, properties):
+  print(f"Connected: reason_code={reason_code}, properties={properties}")
 
 client.on_connect = on_connect
 client.connect(MQTT_BROKER, 1883, 60)
@@ -32,7 +33,6 @@ def lpr_worker():
     global latest_result
     avg = None
     print("🚀 LPR Worker Started...")
-    
     while True:
         # Capture with flip settings
         subprocess.run([
@@ -72,7 +72,7 @@ def lpr_worker():
                         if conf > 75:
                             timestamp = time.strftime("%H:%M:%S")
                             client.publish(MQTT_TOPIC, plate)
-                            print(f"📡 Published: {plate} ({conf}%)")
+                            print(f"Published: {plate} ({conf}%)")
                             time.sleep(5) 
                 except:
                     pass

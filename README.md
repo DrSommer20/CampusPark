@@ -75,12 +75,11 @@ The system consists of the following components:
 | `parking/state/summary`           | Parking Access Service     | Dashboard, Display, Analytics   | Total available/occupied spots       |
 | `parking/notification/`           | Violation, Parking Access  | Notification Service            | Notification triggers                |
 | `parking/registration/plate`      | Web Endpoint               | Parking Access Service          | New license plate registration       |
-| `parking/registration/smsPlate`   | Web Endpoint               | Notification Service            | License plate + phone number combo   |
 
 ### Technologies Used
 
 - **ESP32 microcontrollers** – IoT edge devices with proximity sensors
-- **Raspberry Pi 3B+** – ALPR via OpenCV/easyOCR
+- **Raspberry Pi 3B+** – ALPR via [OpenALPR](https://github.com/openalpr/openalpr)
 - **MQTT Broker (Mosquitto)** – Event-driven message bus
 - **Python / Java Microservices** – Backend services
 - **InfluxDB** – Time-series database for analytics and forecasting
@@ -160,12 +159,11 @@ Das System besteht aus folgenden Komponenten:
 | `parking/state/summary`           | Parking Access Service     | Dashboard, Display, Analytics   | Gesamt verfügbare/belegte Plätze          |
 | `parking/notification/`           | Violation, Parking Access  | Notification Service            | Benachrichtigungsauslöser                 |
 | `parking/registration/plate`      | Web Endpoint               | Parking Access Service          | Neue Kennzeichenregistrierung             |
-| `parking/registration/smsPlate`   | Web Endpoint               | Notification Service            | Kennzeichen + Telefonnummer-Kombination   |
 
 ### Verwendete Technologien
 
 - **ESP32-Mikrocontroller** – IoT-Edge-Geräte mit Näherungssensoren
-- **Raspberry Pi 3B+** – ALPR via OpenCV/easyOCR
+- **Raspberry Pi 3B+** – ALPR via [OpenALPR](https://github.com/openalpr/openalpr)
 - **MQTT Broker (Mosquitto)** – Ereignisgesteuerter Message-Bus
 - **Python / Java Microservices** – Backend-Dienste
 - **InfluxDB** – Zeitreihendatenbank für Analysen und Prognosen

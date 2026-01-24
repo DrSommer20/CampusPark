@@ -1,8 +1,6 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-// -------- CONFIGURATION CONSTANTS --------
-
 // WLAN-DATEN
 const char* ssid          = "MyCampusParkWifi";
 const char* password      = "";
@@ -29,7 +27,7 @@ bool currentState_1 = false;
 unsigned long holdTimer_1 = 0;
 unsigned long heartbeatTimer_1 = 0;
 
-// SENSOR 2
+// SENSOR 2 
 const int TRIG_PIN_2 = 33;
 const int ECHO_PIN_2 = 25;
 const char* MQTT_TOPIC_2 = "parking/raw/spot/A-07";
@@ -38,7 +36,7 @@ bool currentState_2 = false;
 unsigned long holdTimer_2 = 0;
 unsigned long heartbeatTimer_2 = 0;
 
-//delay for loop to nolonger DDOS the MQTT Server
+//delay for loop to nolonger DDOS the MQTT Server xD
 unsigned long lastReconnectAttempt = 0;
 
 WiFiClient espClient;
@@ -60,14 +58,11 @@ void setupWifi() {
 }
 
 void reconnectMqtt() {
-  // Attempt to connect
   Serial.print("Attempting MQTT connection...");
-
-  // Create a truly unique ID using the full MAC
+  // Create a unique ID using the full MAC (Problems when using only parts of it)
   uint64_t chipid = ESP.getEfuseMac();
   char clientId[25];
   sprintf(clientId, "esp32-%04X%08X", (uint16_t)(chipid >> 32), (uint32_t)chipid);
-
   // Attempt to connect
   if (client.connect(clientId, mqttUser, mqttPassword)) {
     Serial.println("verbunden!");
@@ -140,6 +135,7 @@ void setup() {
 
   pinMode(TRIG_PIN_1, OUTPUT);
   pinMode(ECHO_PIN_1, INPUT);
+  //Comment these out if only one Sensor is connected
   pinMode(TRIG_PIN_2, OUTPUT);
   pinMode(ECHO_PIN_2, INPUT);
 
@@ -161,7 +157,7 @@ void loop() {
 
   updateSensorState(TRIG_PIN_1, ECHO_PIN_1, MQTT_TOPIC_1,
                     lastState_1, currentState_1, holdTimer_1, heartbeatTimer_1);
-
+  //Comment this out if only one Sensor is connected
   updateSensorState(TRIG_PIN_2, ECHO_PIN_2, MQTT_TOPIC_2,
                     lastState_2, currentState_2, holdTimer_2, heartbeatTimer_2);
 

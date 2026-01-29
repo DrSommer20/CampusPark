@@ -149,7 +149,7 @@ public class SpotAllocator {
 
     /**
      * Sucht nach einem Kennzeichen, das aktuell irgendwo den Status RESERVED hat.
-     * (Einfache Heuristik: Wenn mehrere reserviert sind, nehmen wir den ersten. 
+     * (Wenn mehrere reserviert sind, nehmen wir den ersten. 
      * In Produktion bräuchte man Zeitstempel, um den 'wahrscheinlichsten' zu finden).
      * * @return Kennzeichen des Users oder null.
      */
@@ -188,7 +188,7 @@ public class SpotAllocator {
         }
 
         // Suche dynamisch nach dem Platz dahinter (Position + 1)
-        String spotBehindId = ParkingTopology.createSpotId(spot.getLane(), spot.getPosition() + 1);
+        String spotBehindId = ParkingTopology.createSpotId(spot.getLane(), spot.getPos() + 1);
         SpotInfo spotBehind = spots.get(spotBehindId);
 
         // Wenn der Platz dahinter EXISTIERT und FREI ist -> Verboten hier zu parken.

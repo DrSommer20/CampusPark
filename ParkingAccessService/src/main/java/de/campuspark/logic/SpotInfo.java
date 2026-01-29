@@ -11,12 +11,15 @@ public class SpotInfo {
     private final String spotId;
     private State state;
     private UserProfile user;
+    private int pos;
+    private int lane;
     
     private Instant arrivalTime;
     private Instant estimatedDepartureTime;
 
     public SpotInfo(String spotId) {
         this.spotId = spotId;
+        parseId();
         setFree(); 
     }
 
@@ -44,6 +47,18 @@ public class SpotInfo {
         this.estimatedDepartureTime = null;
     }
 
+    private void parseId() {
+        // Erwartet Format "L{x}-P{y}" z.B. "L2-P0"
+        try {
+            String[] parts = spotId.split("-");
+            this.lane = Integer.parseInt(parts[0].replace("L", ""));
+            this.pos = Integer.parseInt(parts[1].replace("P", ""));
+        } catch (Exception e) {
+            this.lane = 0; 
+            this.pos = 0;
+        }
+    }
+
     // --- Getter für den Export ---
     public String getSpotId() { 
         return spotId; 
@@ -66,6 +81,14 @@ public class SpotInfo {
 
     public Instant getEstimatedDepartureTime() { 
         return estimatedDepartureTime; 
+    }
+
+    public int getPos(){
+        return pos;
+    }
+
+    public int getLane(){
+        return lane;
     }
 
     public String toString(){

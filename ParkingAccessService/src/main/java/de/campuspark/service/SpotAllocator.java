@@ -242,4 +242,27 @@ public class SpotAllocator {
 
         return score;
     }
+
+    public static SpotInfo[] findBlockersforPlate(String plate) {
+        // 1. Suche den Spot des Users
+        SpotInfo currentSpot = spots.values().stream()
+             .filter(s -> s.getState() != SpotInfo.State.free) 
+             .filter(s -> plate.equals(s.getAssignedPlate()))  
+             .findFirst()
+             .orElse(null);
+
+        if (currentSpot == null) {
+            return new SpotInfo[0];
+        }
+
+        // Hole theoretische Blockierer-IDs aus der Topologie
+        List<String> blockingIds = ParkingTopology.getBlockingSpots(currentSpot.getLane(), currentSpot.getPos());
+        
+        // Hole die echten Objekte und filtere nur die BELEGTEN heraus
+        return blockingIds.stream()
+            .map(id -> spots.get(id)) 
+            .filter(spot -> spot != null)          
+            .filter(spot -> spot.getState() != SpotInfo.State.free)
+            .toArray(SpotInfo[]::new);             
+    }
 }

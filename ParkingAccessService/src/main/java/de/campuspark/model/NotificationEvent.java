@@ -30,6 +30,14 @@ public class NotificationEvent {
         this.message = message;
     }
 
+    public NotificationEvent(UserProfile user, String messageType, String message){
+        this.plate = user.getPlate();
+        this.userId = user.getUserId();
+        this.phoneNumber = user.getPhoneNumber();
+        this.messageType = messageType;
+        this.message = message;
+    }
+
     public String getPlate() {
         return plate;
     }

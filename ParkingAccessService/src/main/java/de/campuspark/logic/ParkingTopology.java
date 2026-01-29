@@ -22,6 +22,14 @@ public class ParkingTopology {
         if (currentLane == 3) return 4; 
         return -1; 
     }
+    /**
+     * Gibt zurück, welche Lane die aktuelle Lane blockiert.
+     */
+    private static int getBlockerLaneFor(int victimLane) {
+        if (victimLane == 1) return 2;
+        if (victimLane == 4) return 3;
+        return -1;
+    }
 
     /**
      * Berechnet dynamisch die IDs der Spots, die von (lane, pos) blockiert werden.
@@ -37,6 +45,35 @@ public class ParkingTopology {
         blockedIds.add(createSpotId(targetLane, (pos * 2)+ 1));
 
         return blockedIds;
+    }
+
+    /**
+     * Ermittelt alle Spot-IDs, die den übergebenen Platz (lane, pos) blockieren.
+     * Das heißt: Wenn auf einem dieser zurückgegebenen Plätze ein Auto steht,
+     * kann (lane, pos) nicht rausfahren.
+     */
+    public static List<String> getBlockingSpots(int lane, int pos) {
+        List<String> blockers = new ArrayList<>();
+
+        // INTERNE BLOCKADE (Stacking / Reihenfolge)
+        if (pos > 0 && (lane == 2 || lane == 3)) {
+            for(int i = pos - 1; i >= 0; i--){
+                blockers.add(createSpotId(lane, i));
+            }
+        }
+
+        // SEITLICHE BLOCKADE (Cross-Lane)
+        int blockerLane = getBlockerLaneFor(lane);
+
+        if (blockerLane != -1) {
+            int blockerPos = pos / 2;
+            blockers.add(createSpotId(blockerLane, blockerPos));
+            for(int i = blockerPos - 1; i >= 0; i--){
+                blockers.add(createSpotId(blockerLane, i));
+            }
+        }
+
+        return blockers;
     }
 
     // Hilfsmethode zum Bauen der ID 

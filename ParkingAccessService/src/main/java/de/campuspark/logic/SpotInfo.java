@@ -75,6 +75,10 @@ public class SpotInfo {
         return user.getPlate();
     }
 
+    public UserProfile getUser(){
+        return user;
+    }
+
     public Instant getArrivalTime() { 
         return arrivalTime; 
     }

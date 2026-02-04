@@ -5,7 +5,7 @@
 
 // --- CONFIGURATION ---
 const MQTT_CONFIG = {
-    host: '192.168.4.1', 
+    host: '192.168.0.100', 
     // Topics
     topic_spot_state: 'parking/state/spot',  // + /#
     topic_summary: 'parking/state/summary',
@@ -104,48 +104,49 @@ function onMessageArrived(msg) {
 
 // --- UI Updates ---
 
+/**
+ * Aktualisiert die Parkplatz-Karte basierend auf MQTT-Daten.
+ * @param {Object} data - Erwartet { spotId: "L1-P1", state: "free", plate: "..." }
+ */
 function updateSpotUI(data) {
-    // Need to find the correct numeric ID from "A-01", "B-09" etc.
-    // Logic: Extract the number from the string.
-    const idMatch = data.spotId.match(/\d+/); 
-    if (!idMatch) return;
+    if (!data || !data.spotId) return;
+
+    const card = document.getElementById(`spot-${data.spotId}`);
     
-    const numericId = parseInt(idMatch[0]); // "01" -> 1
-    const card = document.getElementById(`spot-${numericId}`);
-    
-    if (!card) return;
+    if (!card) {
+        console.warn(`[Parkplatz-Element nicht gefunden: spot-${data.spotId}`);
+        return;
+    }
     
     const icon = card.querySelector('.icon');
     const label = card.querySelector('.spot-label');
-    const displayId = card.querySelector('.spot-id');
 
-    // Update displayed ID just in case
-    displayId.textContent = data.spotId;
-
-    // Remove all states
+    // CSS-Klassen für das Styling zurücksetzen
     card.classList.remove('available', 'occupied', 'reserved');
 
-    if (data.state === 'occupied') {
+    const state = data.state.toLowerCase();
+
+    if (state === 'occupied') {
         card.classList.add('occupied');
         icon.textContent = 'block';
-        label.textContent = 'Taken';
-        // Optional: Tooltip with Plate?
-        card.setAttribute('data-tip', data.plate || 'Unknown');
-    } else if (data.state === 'reserved') {
+        label.textContent = 'Belegt';
+        card.setAttribute('data-tip', data.plate || 'Besetzt');
+    } 
+    else if (state === 'reserved') {
         card.classList.add('reserved');
         icon.textContent = 'bookmarks';
-        label.textContent = 'Reserved';
-        card.setAttribute('data-tip', data.plate || 'Reserved');
-    } else {
+        label.textContent = 'Reserviert';
+        card.setAttribute('data-tip', data.plate || 'Reserviert');
+    } 
+    else {
         card.classList.add('available');
         icon.textContent = 'directions_car';
-        label.textContent = 'Free';
+        label.textContent = 'Frei';
         card.removeAttribute('data-tip');
     }
     
     refreshCount();
 }
-
 function refreshCount() {
     // Simple frontend count of "available" class
     const free = document.querySelectorAll('.spot-card.available').length;
@@ -192,29 +193,21 @@ function publishGate(action) {
         return;
     }
 
-    const myPlate = document.getElementById('gate-plate').value.trim() || "UNKNOWN";
-
     const command = {
-        gateId: "Main-Gate", // Hardcoded or dynamic
-        plate: myPlate,
-        action: action // "OPEN" or "CLOSE"
+        gateId: "Main-Gate", 
+        action: action 
     };
 
     const message = new Paho.MQTT.Message(JSON.stringify(command));
     message.destinationName = MQTT_CONFIG.topic_barrier;
     mqttClient.send(message);
     
-    logEvent(`Sent BarrierCommand: ${action} for ${myPlate}`);
-    
     // Optimistic UI update for visualization
     const visual = document.getElementById('gate-visual');
-    const stat = document.getElementById('stat-gate');
     if(action === "OPEN") {
         visual.classList.add('gate-open');
-        stat.textContent = "OPEN";
     } else {
         visual.classList.remove('gate-open');
-        stat.textContent = "CLOSED";
     }
 }
 

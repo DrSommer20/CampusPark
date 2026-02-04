@@ -44,7 +44,7 @@ public class CalendarService {
                 .orElse(Instant.now());
         
         } catch (IOException e) {
-            System.err.println("Network Error: Could not reach stuv.app for " + user.getCourse());
+            MqttLogger.error("Calendar", "Network Error: Could not reach stuv.app for " + user.getCourse());
             return null;
         }
     }

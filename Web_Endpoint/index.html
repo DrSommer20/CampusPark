@@ -63,10 +63,6 @@
                 <p class="value text-green-600" id="stat-available">--</p>
             </div>
             <div class="stat-card">
-                <p class="label">Gate Status</p>
-                <p class="value text-xl text-slate-800 uppercase tracking-tighter mt-1" id="stat-gate">Unknown</p>
-            </div>
-            <div class="stat-card">
                 <p class="label">System</p>
                 <p class="value text-indigo-600 text-lg">ONLINE</p>
             </div>
@@ -89,64 +85,64 @@
                 
                 <div class="parking-grid" id="parking-map">
                     <div class="space-y-4">
-                        <div class="spot-card available" id="spot-1">
-                            <span class="spot-id">A-01</span>
+                        <div class="spot-card available" id="spot-L1-P2">
+                            <span class="spot-id">L1-P2</span>
                             <span class="material-symbols-outlined text-4xl icon">directions_car</span>
                             <span class="spot-label">Free</span>
                         </div>
-                        <div class="spot-card available" id="spot-2">
-                            <span class="spot-id">A-02</span>
+                        <div class="spot-card available" id="spot-L1-P1">
+                            <span class="spot-id">L1-P1</span>
                             <span class="material-symbols-outlined text-4xl icon">directions_car</span>
                             <span class="spot-label">Free</span>
                         </div>
-                        <div class="spot-card available" id="spot-3">
-                            <span class="spot-id">A-03</span>
-                            <span class="material-symbols-outlined text-4xl icon">directions_car</span>
-                            <span class="spot-label">Free</span>
-                        </div>
-                    </div>
-
-                    <div class="space-y-4 pt-12">
-                        <div class="spot-card h-36 available" id="spot-7">
-                            <span class="spot-id">A-07</span>
-                            <span class="material-symbols-outlined text-4xl icon">directions_car</span>
-                            <span class="spot-label">Free</span>
-                        </div>
-                        <div class="h-8"></div>
-                        <div class="spot-card h-36 available" id="spot-9">
-                            <span class="spot-id">A-09</span>
+                        <div class="spot-card available" id="spot-L1-P0">
+                            <span class="spot-id">L1-P0</span>
                             <span class="material-symbols-outlined text-4xl icon">directions_car</span>
                             <span class="spot-label">Free</span>
                         </div>
                     </div>
 
                     <div class="space-y-4 pt-12">
-                        <div class="spot-card h-36 available" id="spot-8">
-                            <span class="spot-id">A-08</span>
+                        <div class="spot-card h-36 available" id="spot-L2-P1">
+                            <span class="spot-id">L2-P1</span>
                             <span class="material-symbols-outlined text-4xl icon">directions_car</span>
                             <span class="spot-label">Free</span>
                         </div>
                         <div class="h-8"></div>
-                        <div class="spot-card h-36 available" id="spot-10">
-                            <span class="spot-id">A-10</span>
+                        <div class="spot-card h-36 available" id="spot-L2-P0">
+                            <span class="spot-id">L2-P0</span>
+                            <span class="material-symbols-outlined text-4xl icon">directions_car</span>
+                            <span class="spot-label">Free</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 pt-12">
+                        <div class="spot-card h-36 available" id="spot-L3-P1">
+                            <span class="spot-id">L3-P1</span>
+                            <span class="material-symbols-outlined text-4xl icon">directions_car</span>
+                            <span class="spot-label">Free</span>
+                        </div>
+                        <div class="h-8"></div>
+                        <div class="spot-card h-36 available" id="spot-L3-P0">
+                            <span class="spot-id">L3-P0</span>
                             <span class="material-symbols-outlined text-4xl icon">directions_car</span>
                             <span class="spot-label">Free</span>
                         </div>
                     </div>
 
                     <div class="space-y-4">
-                        <div class="spot-card available" id="spot-4">
-                            <span class="spot-id">A-04</span>
+                        <div class="spot-card available" id="spot-L4-P2">
+                            <span class="spot-id">L4-P2</span>
                             <span class="material-symbols-outlined text-4xl icon">directions_car</span>
                             <span class="spot-label">Free</span>
                         </div>
-                        <div class="spot-card available" id="spot-5">
-                            <span class="spot-id">A-05</span>
+                        <div class="spot-card available" id="spot-L4-P1">
+                            <span class="spot-id">L4-P1</span>
                             <span class="material-symbols-outlined text-4xl icon">directions_car</span>
                             <span class="spot-label">Free</span>
                         </div>
-                        <div class="spot-card available" id="spot-6">
-                            <span class="spot-id">A-06</span>
+                        <div class="spot-card available" id="spot-L4-P0">
+                            <span class="spot-id">L4-P0</span>
                             <span class="material-symbols-outlined text-4xl icon">directions_car</span>
                             <span class="spot-label">Free</span>
                         </div>
@@ -184,14 +180,9 @@
                         <div class="w-2 h-14 bg-red-500 rounded-full gate-animated shadow-sm origin-bottom-left" id="gate-visual"></div>
                         <div class="absolute bottom-5 left-5 w-4 h-4 bg-slate-800 rounded-full border-2 border-white z-10"></div>
                     </div>
-                    
-                    <div class="mb-3">
-                         <input class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold uppercase" id="gate-plate" placeholder="Your Plate" type="text" value="MOS-TEST-1">
-                    </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <button class="py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md active:scale-95 transition-all" onclick="publishGate('OPEN')">OPEN</button>
-                        <button class="py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl active:scale-95 transition-all" onclick="publishGate('CLOSE')">CLOSE</button>
                     </div>
                 </div>
 

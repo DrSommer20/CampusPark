@@ -1,6 +1,6 @@
 package de.campuspark.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper; // Jackson für JSON
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.campuspark.model.LogEvent;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 public class MqttLogger {
 
     private static MqttClient client;
-    private static final String TOPIC = "campus/logs";
+    private static final String TOPIC = "parking/logs";
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public static void setMqttClient(MqttClient mqttClient) {
@@ -46,7 +46,7 @@ public class MqttLogger {
             
             String json = mapper.writeValueAsString(event);
             MqttMessage mqttMessage = new MqttMessage(json.getBytes(StandardCharsets.UTF_8));
-            mqttMessage.setQos(0); // Logging muss nicht Qos 2 sein (Performance)
+            mqttMessage.setQos(0);
             
             client.publish(TOPIC, mqttMessage);
             

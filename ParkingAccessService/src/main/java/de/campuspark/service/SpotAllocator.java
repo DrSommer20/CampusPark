@@ -17,6 +17,8 @@ import de.campuspark.model.UserProfile;
  * Diese Klasse hält den aktuellen State aller Parkplätze (In-Memory) und entscheidet,
  * welcher Parkplatz einem User zugewiesen wird. Dabei werden physische Abhängigkeiten
  * (Zuparken/Stacking) sowie strategische Ziele (Kurzparker vorne) berücksichtigt.
+ * <p>
+ * Logging erfolgt nun strukturiert über MQTT.
  */
 public class SpotAllocator {
     
@@ -52,7 +54,7 @@ public class SpotAllocator {
         // Strategische Entscheidung: Ab wann gilt jemand als Langparker?
         boolean isLongTerm = durationHours > 4;
 
-        return spots.values().stream()
+        SpotInfo selectedSpot = spots.values().stream()
             .filter(s -> s.getState() == SpotInfo.State.free)
             // Prüfen, ob der Platz belegt werden darf (Stacking-Regel)
             .filter(SpotAllocator::obeysBackfillRules)
@@ -63,6 +65,14 @@ public class SpotAllocator {
                 return spot;
             })
             .orElse(null);
+
+        if (selectedSpot != null) {
+            MqttLogger.info("SpotAllocator", "Assigned spot to user " + user.getPlate(), selectedSpot.getSpotId());
+        } else {
+            MqttLogger.warn("SpotAllocator", "No spot available for user " + user.getPlate(), null);
+        }
+
+        return selectedSpot;
     }
 
     /**
@@ -77,7 +87,8 @@ public class SpotAllocator {
     public static SpotInfo handleSensorUpdate(String spotId, boolean isSensorOccupied) {
         SpotInfo currentSpot = spots.computeIfAbsent(spotId, id -> {
             SpotInfo s = new SpotInfo(id);
-            // Bei Neuerstellung (Discovery) auch einmal senden!
+            // Bei Neuerstellung (Discovery) auch einmal loggen
+            MqttLogger.info("SpotAllocator", "New spot discovered via MQTT", id);
             return s;
         });
         
@@ -87,7 +98,7 @@ public class SpotAllocator {
         if (isSensorOccupied != isSpotLogicallyOccupied) {
                 
             if (isSensorOccupied) {
-                System.out.println("In isSensor Occupied car arrival");
+                MqttLogger.info("SpotAllocator", "Sensor detected car arrival", spotId);
                 handleCarArrival(currentSpot);
 
             } else {
@@ -95,7 +106,8 @@ public class SpotAllocator {
             }
         }
         else{
-            System.out.println("[ADMIN] Sensor status (" + isSensorOccupied + ") matches logical status. No change.");
+            // Optional: Das kann viel Traffic erzeugen, evtl. auskommentieren für Produktion
+            MqttLogger.info("SpotAllocator", "Sensor status matches logical status. No change.", spotId);
         }
 
         return currentSpot;
@@ -113,7 +125,8 @@ public class SpotAllocator {
         if (spot.getState() == SpotInfo.State.reserved) {
             String plate = spot.getAssignedPlate();
             spot.occupyBy(plate); // Status ändern zu OCCUPIED
-            System.out.println("[ADMIN] Success! User " + plate + " parked correctly on " + spot.getSpotId());
+            
+            MqttLogger.info("SpotAllocator", "Success: User " + plate + " parked correctly", spot.getSpotId());
         } 
         // Fall B: Der Parkplatz war FREI (Falschparker oder nicht getrackter User)
         else if (spot.getState() == SpotInfo.State.free) {
@@ -121,14 +134,14 @@ public class SpotAllocator {
 
             if (potentialWrongParker != null) {
                 // Wir nehmen an, dass es dieser User ist, der sich verfahren hat
-                System.out.println("[ADMIN] WARNING: User " + potentialWrongParker + " parked on wrong spot " + spot.getSpotId());
+                MqttLogger.warn("SpotAllocator", "User " + potentialWrongParker + " parked on wrong spot (Target was elsewhere)", spot.getSpotId());
+                
                 freeReservationForUser(potentialWrongParker); // Alte Reservierung lösen
                 spot.occupyBy(potentialWrongParker);          // Neue Position setzen
             } else {
-                System.out.println("[ADMIN] WARNING: User UNKNOWN parked on wrong spot " + spot.getSpotId());
+                MqttLogger.warn("SpotAllocator", "UNKNOWN User parked on spot (No pending reservation found)", spot.getSpotId());
                 
                 spot.occupyBy("UNKNOWN");
-                System.out.println(spot);
             }
         }
     }
@@ -140,7 +153,7 @@ public class SpotAllocator {
      */
     private static void handleCarDeparture(SpotInfo spot) {
         if (spot.getState() == SpotInfo.State.occupied) {
-            System.out.println("[ADMIN] Spot " + spot.getSpotId() + " is now free. User " + spot.getAssignedPlate() + " left.");
+            MqttLogger.info("SpotAllocator", "Spot is now free. User " + spot.getAssignedPlate() + " left.", spot.getSpotId());
         }
         spot.setFree();
     }
@@ -169,7 +182,7 @@ public class SpotAllocator {
         spots.values().stream()
                 .filter(s -> s.getState() == SpotInfo.State.reserved && plate.equals(s.getAssignedPlate()))
                 .forEach(s -> {
-                    System.out.println("[ADMIN] Auto-releasing reservation on " + s.getSpotId() + " (User took another spot)");
+                    MqttLogger.info("SpotAllocator", "Auto-releasing reservation (User took another spot)", s.getSpotId());
                     s.setFree();
                 });
     }
@@ -210,7 +223,7 @@ public class SpotAllocator {
     private static double calculateScore(SpotInfo spot, boolean isLongTerm) {
         double score = 0.0;
         int lane = spot.getLane();
-        int pos = spot.getPos(); // Annahme: Methode heißt getPosition(), passend zur Logic
+        int pos = spot.getPos(); // Annahme: Methode heißt getPos(), passend zur Logic
 
         // Prüfen, ob ich ein Blockierer bin (via Topology)
         boolean isBlocker = (ParkingTopology.getBlockedLane(lane) != -1);

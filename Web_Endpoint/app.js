@@ -64,7 +64,7 @@ function onConnectSuccess() {
     updateConnectionUI('connected');
     logEvent("Online. Subscribed to necessary topics.");
     
-    // Subscribe ONLY to State topics (to see what is happening)
+    // Subscribe to State topics 
     mqttClient.subscribe(MQTT_CONFIG.topic_spot_state + "/#");
     mqttClient.subscribe(MQTT_CONFIG.topic_summary);
 }
@@ -89,7 +89,7 @@ function onMessageArrived(msg) {
     if (topic.startsWith(MQTT_CONFIG.topic_spot_state)) {
         try {
             const data = JSON.parse(payloadStr);
-            // data format: { spotId:"A-01", state:"occupied", plate:"...", ... }
+            // data format: { spotId:"L1-P2", state:"occupied", plate:"...", ... }
             updateSpotUI(data);
         } catch (e) {
             console.error("JSON Error in SpotState", e);
@@ -112,36 +112,42 @@ function updateSpotUI(data) {
     if (!data || !data.spotId) return;
 
     const card = document.getElementById(`spot-${data.spotId}`);
-    
-    if (!card) {
-        console.warn(`[Parkplatz-Element nicht gefunden: spot-${data.spotId}`);
-        return;
-    }
+    if (!card) return;
     
     const icon = card.querySelector('.icon');
     const label = card.querySelector('.spot-label');
+    const timeDisplay = card.querySelector('.departure-time'); // Neues Element greifen
 
-    // CSS-Klassen für das Styling zurücksetzen
     card.classList.remove('available', 'occupied', 'reserved');
-
     const state = data.state.toLowerCase();
+
+    // Zeit-Formatierung vorbereiten
+    let timeString = "";
+    if (data.estimatedDepartureTime) {
+        const date = new Date(data.estimatedDepartureTime);
+        // Formatiert zu "HH:mm", z.B. "15:30"
+        timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
 
     if (state === 'occupied') {
         card.classList.add('occupied');
         icon.textContent = 'block';
         label.textContent = 'Belegt';
+        if (timeDisplay) timeDisplay.textContent = `bis ~${timeString}`; 
         card.setAttribute('data-tip', data.plate || 'Besetzt');
     } 
     else if (state === 'reserved') {
         card.classList.add('reserved');
         icon.textContent = 'bookmarks';
         label.textContent = 'Reserviert';
+        if (timeDisplay) timeDisplay.textContent = ""; 
         card.setAttribute('data-tip', data.plate || 'Reserviert');
     } 
     else {
         card.classList.add('available');
         icon.textContent = 'directions_car';
         label.textContent = 'Frei';
+        if (timeDisplay) timeDisplay.textContent = ""; 
         card.removeAttribute('data-tip');
     }
     
@@ -187,27 +193,32 @@ function updateConnectionUI(status) {
  * Sends BarrierCommand
  * JSON: { gateId: "Einfahrt-Nord", plate: "...", action: "OPEN" }
  */
+/**
+ * Sendet den OPEN Befehl und setzt die Animation nach 10 Sek. zurück
+ */
 function publishGate(action) {
     if (!mqttClient || !mqttClient.isConnected()) {
         showToast("Error: Broker disconnected", "error");
         return;
     }
+    if (action === "OPEN") {
+        const command = {
+            gateId: "Main-Gate", 
+            action: action 
+        };
 
-    const command = {
-        gateId: "Main-Gate", 
-        action: action 
-    };
-
-    const message = new Paho.MQTT.Message(JSON.stringify(command));
-    message.destinationName = MQTT_CONFIG.topic_barrier;
-    mqttClient.send(message);
-    
-    // Optimistic UI update for visualization
-    const visual = document.getElementById('gate-visual');
-    if(action === "OPEN") {
-        visual.classList.add('gate-open');
-    } else {
-        visual.classList.remove('gate-open');
+        const message = new Paho.MQTT.Message(JSON.stringify(command));
+        message.destinationName = MQTT_CONFIG.topic_barrier;
+        mqttClient.send(message);
+        
+        const visual = document.getElementById('gate-visual');
+        if (visual) {
+            visual.classList.add('gate-open');
+            setTimeout(() => {
+                visual.classList.remove('gate-open');
+                console.log("Animation: Gate closed visually");
+            }, 10000); 
+        }
     }
 }
 

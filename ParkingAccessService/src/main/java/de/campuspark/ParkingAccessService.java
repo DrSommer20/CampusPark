@@ -24,8 +24,6 @@ public class ParkingAccessService
             options.setMaxInflight(100);
             options.setConnectionTimeout(30);
             options.setKeepAliveInterval(60);
-            options.setUserName(Config.MQTT_USERNAME);
-            options.setPassword(Config.MQTT_PASSWORD.toCharArray());
 
 
             client.setCallback(new ParkingAccessCallback(client));

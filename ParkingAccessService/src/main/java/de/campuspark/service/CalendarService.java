@@ -1,5 +1,7 @@
 package de.campuspark.service;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -30,9 +32,19 @@ public class CalendarService {
         return eventDate.equals(targetDate);
     }
 
-    public static Instant getEstimatedEndTime(UserProfile user){
-        String courseUrl = String.format(Config.STUV_BASE_URL, user.getCourse());
-        try (InputStream in = URI.create(courseUrl).toURL().openStream()) {
+    public static Instant getEstimatedEndTime(UserProfile user) {
+        // Pfad zu deinen lokalen Dateien (z.B. im Projekt-Root oder einem 'resources' Ordner)
+        String localFileName = user.getCourse() + ".ics";
+        File localFile = new File(localFileName);
+
+        try (InputStream in = localFile.exists() 
+                ? new FileInputStream(localFile) // Nutze lokale Datei, falls vorhanden
+                : URI.create(String.format(Config.STUV_BASE_URL, user.getCourse())).toURL().openStream()) {
+            
+            if (localFile.exists()) {
+                System.out.println("DEBUG: Lade Kalender lokal für " + user.getCourse());
+            }
+
             ICalendar ical = Biweekly.parse(in).first();
             LocalDate today = LocalDate.now();
 
@@ -44,7 +56,7 @@ public class CalendarService {
                 .orElse(Instant.now());
         
         } catch (IOException e) {
-            MqttLogger.error("Calendar", "Network Error: Could not reach stuv.app for " + user.getCourse());
+            System.err.println("Fehler beim Laden des Kalenders: " + e.getMessage());
             return null;
         }
     }
@@ -52,13 +64,14 @@ public class CalendarService {
     private static boolean shouldIgnore(VEvent event) {
         String summary = (event.getSummary() != null) ? event.getSummary().getValue().toLowerCase() : "";
         String location = (event.getLocation() != null) ? event.getLocation().getValue().toLowerCase() : "";
-
-        return summary.toLowerCase().contains("stuv") || location.isBlank();
+        return summary.contains("stuv") || location.isBlank();
     }
 
-    // Quick test main method
     public static void main(String[] args) {
+        // Test für WWI23A
         Instant time = CalendarService.getEstimatedEndTime(new UserProfile("TEST", "01", "Student", "01234", "WWI23A"));
-        System.out.println(time.atZone(ZoneId.systemDefault()).toLocalDateTime().format(timeFormatter));
+        if (time != null) {
+            System.out.println("Endzeit: " + time.atZone(ZoneId.systemDefault()).toLocalDateTime().format(timeFormatter));
+        }
     }
 }

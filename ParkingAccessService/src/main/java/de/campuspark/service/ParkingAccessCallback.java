@@ -31,9 +31,7 @@ public class ParkingAccessCallback implements MqttCallback {
             String payload = new String(message.getPayload(), StandardCharsets.UTF_8);
 
             // Logging des eingehenden Traffics
-            // Hinweis: Wir loggen hier keine SpotID (null), da sie noch unbekannt ist
-            // Optional: Wenn das zu viel Spam ist, kann man topics wie "spot/+/state" hier ausschließen.
-            if (!topic.startsWith("campus/logs")) { // Logge keine Logs, sonst Endlosschleife!
+            if (!topic.startsWith("campus/logs")) {
                 MqttLogger.info("ParkingAccess", "Received on " + topic + ": " + payload, null);
             }
 
@@ -59,7 +57,6 @@ public class ParkingAccessCallback implements MqttCallback {
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
-        // Delivery complete ist meist uninteressant für Logs
     }
 
     // -----------------------------
@@ -86,7 +83,6 @@ public class ParkingAccessCallback implements MqttCallback {
         }
 
         // 2. Parkplatz finden (z. B. freie Spots aus State-Service)
-        // Hinweis: Logging passiert bereits IN SpotAllocator, aber hier loggen wir den Erfolg am Gate
         SpotInfo spot = SpotAllocator.reserveSpotForUser(user);
         
         // SpotState sofort publishen (Reserviert), damit niemand anders ihn nimmt

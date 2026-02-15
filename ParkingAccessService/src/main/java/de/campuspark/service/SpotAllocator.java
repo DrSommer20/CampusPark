@@ -13,17 +13,15 @@ import de.campuspark.model.UserProfile;
 
 /**
  * Zentrale Komponente für die Parkplatz-Zuweisung und Statusverwaltung.
- * <p>
  * Diese Klasse hält den aktuellen State aller Parkplätze (In-Memory) und entscheidet,
  * welcher Parkplatz einem User zugewiesen wird. Dabei werden physische Abhängigkeiten
  * (Zuparken/Stacking) sowie strategische Ziele (Kurzparker vorne) berücksichtigt.
- * <p>
  * Logging erfolgt nun strukturiert über MQTT.
  */
 public class SpotAllocator {
     
     /**
-     * Thread-safe Map aller Parkplätze, indiziert über die Spot-ID (z.B. "L1-P0").
+     * Map aller Parkplätze, indiziert über die Spot-ID (z.B. "L1-P0").
      */
     private static final Map<String, SpotInfo> spots = new ConcurrentHashMap<>();
 
@@ -37,15 +35,12 @@ public class SpotAllocator {
     }
     
     /**
-     * Kernlogik der Zuweisung: Findet den optimalen Platz für einen User.
-     * <p>
+     * Findet den optimalen Platz für einen User.
      * Ablauf:
      * 1. Ermittlung der Parkdauer via CalendarService.
      * 2. Filterung physikalisch nicht nutzbarer Plätze (Backfill-Regeln).
      * 3. Berechnung eines Scores (Penalty-System) für alle Kandidaten.
      * 4. Reservierung des Platzes mit dem geringsten Score.
-     * * @param user Das Profil des Users (für Kalender-Check und Kennzeichen).
-     * @return Das reservierte SpotInfo-Objekt oder null, wenn kein Platz verfügbar.
      */
     public static SpotInfo reserveSpotForUser(UserProfile user) {
         Instant endTime = CalendarService.getEstimatedEndTime(user);
@@ -76,13 +71,9 @@ public class SpotAllocator {
     }
 
     /**
-     * 2. SENSOR-LOGIK: Verarbeitet Updates vom MQTT und korrigiert Zuweisungen.
-     * <p>
+     * Verarbeitet Updates vom MQTT und korrigiert Zuweisungen.
      * Synchronisiert den logischen Status (Software) mit dem physischen Status (Sensor).
      * Erkennt Ankünfte und Abfahrten.
-     * * @param spotId Die ID des Sensors/Parkplatzes.
-     * @param isSensorOccupied True, wenn ein Auto auf dem Sensor steht.
-     * @return Das aktualisierte SpotInfo Objekt.
      */
     public static SpotInfo handleSensorUpdate(String spotId, boolean isSensorOccupied) {
         SpotInfo currentSpot = spots.computeIfAbsent(spotId, id -> {
@@ -115,10 +106,9 @@ public class SpotAllocator {
 
     /**
      * Verarbeitet das physische Parken eines Autos (Sensor wechselt auf belegt).
-     * <p>
      * Unterscheidet zwei Fälle:
      * A) Reguläre Ankunft (Platz war reserviert).
-     * B) Falschparker (Platz war frei -> Suche nach verwaister Reservierung).
+     * B) Falschparker (Platz war frei -> Suche nach ausstehender Reservierung).
      */
     private static void handleCarArrival(SpotInfo spot) {
         // Fall A: Der Parkplatz war bereits für jemanden RESERVIERT
@@ -149,7 +139,6 @@ public class SpotAllocator {
     /**
      * Verarbeitet das Wegfahren eines Autos (Sensor wechselt auf frei).
      * Gibt den Parkplatz logisch wieder frei und löscht die User-Zuordnung.
-     * * @param spot Der betroffene Parkplatz.
      */
     private static void handleCarDeparture(SpotInfo spot) {
         if (spot.getState() == SpotInfo.State.occupied) {
@@ -162,9 +151,7 @@ public class SpotAllocator {
 
     /**
      * Sucht nach einem Kennzeichen, das aktuell irgendwo den Status RESERVED hat.
-     * (Wenn mehrere reserviert sind, nehmen wir den ersten. 
-     * In Produktion bräuchte man Zeitstempel, um den 'wahrscheinlichsten' zu finden).
-     * * @return Kennzeichen des Users oder null.
+     * (Wenn mehrere reserviert sind, nehmen wir den ersten)
      */
     private static String findPendingUser() {
         return spots.values().stream()
@@ -189,13 +176,11 @@ public class SpotAllocator {
 
     /**
      * Prüft die physikalische Auffüll-Logik (Backfill) für Stack-Lanes.
-     * <p>
      * Regel: In einer Stack-Lane (Fahrgasse) darf ein Platz nur belegt werden,
-     * wenn der Platz *dahinter* bereits belegt ist (oder nicht existiert).
-     * Sonst würde der hintere Platz unerreichbar werden.
+     * wenn der Platz dahinter bereits belegt ist (oder nicht existiert).
      */
     private static boolean obeysBackfillRules(SpotInfo spot) {
-        // Regel gilt nur für Stack Lanes (definiert in Topology)
+        // Regel gilt nur für Stack Lanes
         if (!ParkingTopology.isStackLane(spot.getLane())) {
             return true;
         }
@@ -214,7 +199,6 @@ public class SpotAllocator {
     /**
      * Berechnet einen Score ("Kosten") für einen Parkplatz basierend auf Strategie.
      * Niedriger Score = Besserer Platz für diesen User.
-     * <p>
      * Kriterien:
      * - Distanz zum Gate (Basis-Score)
      * - Parkdauer (Langparker sollen nach hinten/Stacking)
@@ -223,25 +207,24 @@ public class SpotAllocator {
     private static double calculateScore(SpotInfo spot, boolean isLongTerm) {
         double score = 0.0;
         int lane = spot.getLane();
-        int pos = spot.getPos(); // Annahme: Methode heißt getPos(), passend zur Logic
-
-        // Prüfen, ob ich ein Blockierer bin (via Topology)
+        int pos = spot.getPos(); 
+        
+        // Prüfen, ob ich ein Blockierer bin 
         boolean isBlocker = (ParkingTopology.getBlockedLane(lane) != -1);
 
         // Berechnungs des Distanz zum Tor (Vorne = geringer Score)
         score += pos * 10; 
 
         // Langzeitparker Logik:
-        // Sie bekommen einen massiven Bonus für weit hinten liegende Plätze (-Score).
-        // Sie bekommen eine massive Strafe, wenn sie Blockierer spielen (+Score).
+        // Sie bekommen einen massiven Bonus für weit hinten liegende Plätze
+        // Sie bekommen eine massive Strafe, wenn sie Blockierer spielen
         if (isLongTerm) {
             score -= (pos * 25); 
             if (isBlocker) score += 1000.0;
         }
 
         // Kollateralschaden-Logik:
-        // Verhindert das Zuparken von Plätzen, die noch frei sind.
-        // Wenn ich hier parke, wie viele freie Plätze mache ich unerreichbar?
+        // Verhindert das Zuparken von Plätzen, die noch frei sind
         if (isBlocker) {
             List<String> blockedIds = ParkingTopology.getBlockedSpotIds(lane, pos);
             long freeBlockedSpots = blockedIds.stream()

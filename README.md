@@ -28,6 +28,12 @@ The system consists of:
 - **1 ESP32 device** – Manages barrier allocation and parking spot assignment
 - **1 ESP32 device** – Displays available parking spaces
 
+<img width="893" height="559" alt="2026-04-27 16_27_59- ssh – Datei-Explorer" src="https://github.com/user-attachments/assets/f762ad1b-2883-4bf5-ba5b-ce955b8bf4d6" />
+
+<img width="889" height="480" alt="2026-04-27 16_28_07- ssh – Datei-Explorer" src="https://github.com/user-attachments/assets/9ebe97ed-eca1-4dc3-b0de-92d67451ec00" />
+
+<img width="325" height="452" alt="2026-04-27 16_28_25-Greenshot" src="https://github.com/user-attachments/assets/de81bf8b-a40a-44b7-a2b8-6d7ed7be1d53" />
+
 ### System Architecture
 
 #### **MQTT Broker at the Core**
@@ -61,6 +67,8 @@ The system consists of the following components:
 - [**RasPi_Plate_Recognition**](https://github.com/DrSommer20/CampusPark/tree/main/RasPi_Plate_Recognition) – License plate recognition using OpenCV/easyOCR
 - [**Violation_Service**](https://github.com/DrSommer20/CampusPark/tree/main/Violation_Service) – Monitors and reports parking violations
 - [**Web_Endpoint**](https://github.com/DrSommer20/CampusPark/tree/main/Web_Endpoint) – Web dashboard with real-time visualization (TailwindCSS + JavaScript)
+
+<img width="905" height="600" alt="2026-04-27 16_29_18- ssh – Datei-Explorer" src="https://github.com/user-attachments/assets/99a4c963-5001-4b4a-bdd0-0435bbe86774" />
 
 ### MQTT Topics (Overview)
 
@@ -112,6 +120,12 @@ Das System besteht aus:
 - **1 ESP32-Gerät** – Verwaltet Schrankenzuteilung und Parkplatzzuweisung
 - **1 ESP32-Gerät** – Zeigt verfügbare Parkplätze an
 
+<img width="893" height="559" alt="2026-04-27 16_27_59- ssh – Datei-Explorer" src="https://github.com/user-attachments/assets/f762ad1b-2883-4bf5-ba5b-ce955b8bf4d6" />
+
+<img width="889" height="480" alt="2026-04-27 16_28_07- ssh – Datei-Explorer" src="https://github.com/user-attachments/assets/9ebe97ed-eca1-4dc3-b0de-92d67451ec00" />
+
+<img width="325" height="452" alt="2026-04-27 16_28_25-Greenshot" src="https://github.com/user-attachments/assets/de81bf8b-a40a-44b7-a2b8-6d7ed7be1d53" />
+
 ### Systemarchitektur
 
 #### **MQTT-Broker im Zentrum**
@@ -146,6 +160,8 @@ Das System besteht aus folgenden Komponenten:
 - [**Violation_Service**](https://github.com/DrSommer20/CampusPark/tree/main/Violation_Service) – Überwacht und meldet Parkverstöße
 - [**Web_Endpoint**](https://github.com/DrSommer20/CampusPark/tree/main/Web_Endpoint) – Web-Dashboard mit Echtzeitvisualisierung (TailwindCSS + JavaScript)
 
+<img width="905" height="600" alt="2026-04-27 16_29_18- ssh – Datei-Explorer" src="https://github.com/user-attachments/assets/99a4c963-5001-4b4a-bdd0-0435bbe86774" />
+
 ### MQTT-Topics (Übersicht)
 
 | Topic                             | Publisher                  | Subscriber                      | Beschreibung                              |
@@ -169,4 +185,6 @@ Das System besteht aus folgenden Komponenten:
 - **InfluxDB** – Zeitreihendatenbank für Analysen und Prognosen
 - **TailwindCSS + JavaScript** – Modernes Web-Dashboard mit Echtzeit-Updates
 - **Twilio** – SMS-Benachrichtigungsdienst
+
+
 
